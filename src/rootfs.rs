@@ -6,10 +6,10 @@ use std::{
 use nix::mount::{mount, MsFlags};
 
 pub fn setup_rootfs(new_root: &str) {
-    std::env::set_current_dir(new_root).expect("Failed to change directory to new root");
+    std::env::set_current_dir(new_root).expect("Failed to change directory");
     nix::unistd::chroot(new_root).expect("Failed to change root");
+    std::env::set_current_dir("/").expect("Failed to change directory");
     mount_proc();
-    println!("Rootfs setup complete");
 }
 
 fn mount_proc() {
@@ -18,7 +18,7 @@ fn mount_proc() {
             Some("proc"),
             "/proc",
             Some("proc"),
-            MsFlags::MS_NOSUID | MsFlags::MS_NOEXEC | MsFlags::MS_NODEV,
+            MsFlags::empty(),
             None::<&str>,
         )
         .unwrap();

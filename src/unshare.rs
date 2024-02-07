@@ -2,10 +2,11 @@
 //
 // extern crate clap;
 use crate::rootfs::setup_rootfs;
+use nix::errno::Errno;
 use nix::mount::{mount, MsFlags};
 use nix::sched::{clone, unshare, CloneFlags};
 use nix::sys::wait::waitpid;
-use nix::unistd::{execvp, fork, ForkResult};
+use nix::unistd::{execvp, fork, ForkResult, Pid};
 use std::ffi::CString;
 use std::fs::read_dir;
 
@@ -18,20 +19,37 @@ pub unsafe fn run_container(cmd: &str, args: Vec<&str>) {
     )
     .expect("Failed to unshare");
 
-    let current_dir = std::env::current_dir().unwrap();
-    setup_rootfs(&format!("{}/newroot", current_dir.display()));
     match fork() {
         Ok(ForkResult::Parent { child, .. }) => {
-            waitpid(child, None).expect("Failed to wait for child");
+            wait_for_child_process(child);
         }
         Ok(ForkResult::Child) => {
+            let current_dir = std::env::current_dir().unwrap();
+            setup_rootfs(&format!("{}/newroot", current_dir.display()));
             list_files();
-            execute_command(cmd, args);
+            match fork() {
+                Ok(ForkResult::Parent { child, .. }) => {
+                    wait_for_child_process(child);
+                }
+                Ok(ForkResult::Child) => {
+                    execute_command(cmd, args);
+                }
+                Err(err) => {
+                    fork_failed(err);
+                }
+            }
         }
         Err(err) => {
-            eprintln!("Fork failed! {}", err)
+            fork_failed(err);
         }
     }
+}
+
+fn wait_for_child_process(child: Pid) {
+    waitpid(child, None).expect("Failed to wait for child");
+}
+fn fork_failed(err: Errno) {
+    eprintln!("Fork failed! {}", err);
 }
 
 fn list_files() {
