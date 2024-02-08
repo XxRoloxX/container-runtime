@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use crate::{
     image::Image,
-    rootfs::{clear_directory, mount_overlayfs},
+    rootfs::{clear_directory, mount_overlayfs, setup_rootfs},
     unshare::get_install_path,
 };
 
@@ -77,6 +77,11 @@ impl Container {
         let work = self.get_work_overlayfs_path()?;
         let target = self.get_merged_overlayfs_path()?;
         mount_overlayfs(&lower, &upper, &work, &target);
+        Ok(())
+    }
+    pub fn setup_rootfs(&self) -> Result<(), String> {
+        let new_root = self.get_merged_overlayfs_path()?;
+        setup_rootfs(&new_root)?;
         Ok(())
     }
 

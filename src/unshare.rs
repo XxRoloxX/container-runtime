@@ -30,7 +30,7 @@ pub unsafe fn run_container(container: &Container) -> Result<(), String> {
             Ok(())
         }
         Ok(ForkResult::Child) => {
-            let current_dir = std::env::current_dir().unwrap();
+            container.setup_rootfs()?;
             list_files();
             execute_command(
                 &container.command,
