@@ -1,16 +1,21 @@
-// use clap::{App, Arg, SubCommand};
-//
-// extern crate clap;
+use crate::container::Container;
 use crate::rootfs::setup_rootfs;
 use nix::errno::Errno;
-use nix::mount::{mount, MsFlags};
-use nix::sched::{clone, unshare, CloneFlags};
+use nix::sched::{unshare, CloneFlags};
 use nix::sys::wait::waitpid;
 use nix::unistd::{execvp, fork, ForkResult, Pid};
 use std::ffi::CString;
 use std::fs::read_dir;
+use std::path::Path;
 
-pub unsafe fn run_container(cmd: &str, args: Vec<&str>) {
+pub fn get_install_path() -> Result<String, String> {
+    match std::env::var("INSTALL_PATH") {
+        Ok(path) => Ok(path),
+        Err(_) => Err("INSTALL_PATH not set".to_string()),
+    }
+}
+pub unsafe fn run_container(container: &Container) -> Result<(), String> {
+    container.mount_overlayfs()?;
     unshare(
         CloneFlags::CLONE_NEWPID
             | CloneFlags::CLONE_NEWNS
@@ -22,25 +27,20 @@ pub unsafe fn run_container(cmd: &str, args: Vec<&str>) {
     match fork() {
         Ok(ForkResult::Parent { child, .. }) => {
             wait_for_child_process(child);
+            Ok(())
         }
         Ok(ForkResult::Child) => {
             let current_dir = std::env::current_dir().unwrap();
-            setup_rootfs(&format!("{}/newroot", current_dir.display()));
             list_files();
-            match fork() {
-                Ok(ForkResult::Parent { child, .. }) => {
-                    wait_for_child_process(child);
-                }
-                Ok(ForkResult::Child) => {
-                    execute_command(cmd, args);
-                }
-                Err(err) => {
-                    fork_failed(err);
-                }
-            }
+            execute_command(
+                &container.command,
+                container.args.iter().map(AsRef::as_ref).collect(),
+            )?;
+            Ok(())
         }
-        Err(err) => {
-            fork_failed(err);
+        Err(_) => {
+            // fork_failed(err);
+            Err("Failed to fork".to_string())
         }
     }
 }
@@ -59,7 +59,7 @@ fn list_files() {
         println!("Name: {}", p.display());
     }
 }
-pub fn execute_command(cmd: &str, args: Vec<&str>) {
+pub fn execute_command(cmd: &str, args: Vec<&str>) -> Result<(), String> {
     let c_cmd = CString::new(cmd).expect("Failed to convert to CString");
     let c_args: Vec<CString> = args
         .iter()
@@ -68,5 +68,6 @@ pub fn execute_command(cmd: &str, args: Vec<&str>) {
     let c_args_refs: Vec<&std::ffi::CStr> = c_args.iter().map(AsRef::as_ref).collect();
     println!("Running command: {}", cmd);
     println!("Args: {:?}", &c_args_refs);
-    execvp(&c_cmd, &c_args_refs).expect("Failed to execvp");
+    execvp(&c_cmd, &c_args_refs).map_err(|e| format!("Failed to execute command:{} {}", cmd, e))?;
+    Ok(())
 }

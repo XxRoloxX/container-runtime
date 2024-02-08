@@ -5,11 +5,36 @@ use std::{
 
 use nix::mount::{mount, MsFlags};
 
-pub fn setup_rootfs(new_root: &str) {
-    std::env::set_current_dir(new_root).expect("Failed to change directory");
-    nix::unistd::chroot(new_root).expect("Failed to change root");
-    std::env::set_current_dir("/").expect("Failed to change directory");
+fn change_current_dir(path: &str) -> Result<(), String> {
+    std::env::set_current_dir(path).map_err(|e| format!("{}", e))?;
+    Ok(())
+}
+
+pub fn setup_rootfs(new_root: &str) -> Result<(), String> {
+    change_current_dir(new_root)?;
+    nix::unistd::chroot(new_root)
+        .map_err(|e| format!("Failed to chroot into {}: {}", new_root, e))?;
+    change_current_dir("/")?;
     mount_proc();
+    Ok(())
+}
+pub fn clear_directory(path: &str) -> Result<(), String> {
+    std::fs::remove_dir_all(path);
+    std::fs::create_dir_all(path)
+        .map_err(|e| format!("Failed to create direcory at {}: {}", path, e))?;
+    Ok(())
+}
+
+pub fn mount_overlayfs(lower: &str, upper: &str, work: &str, target: &str) {
+    let flags = MsFlags::MS_NOSUID | MsFlags::MS_NODEV | MsFlags::MS_NOATIME;
+    mount(
+        Some("overlay"),
+        target,
+        Some("overlay"),
+        flags,
+        Some(format!("lowerdir={},upperdir={},workdir={}", lower, upper, work).as_str()),
+    )
+    .expect("Failed to mount overlayfs");
 }
 
 fn mount_proc() {
