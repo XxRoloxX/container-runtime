@@ -2,13 +2,10 @@ use clap::{App, Arg, SubCommand};
 use container_runtime::container::Container;
 use container_runtime::deployment::deploy_container;
 use container_runtime::image::Image;
-// use container_runtime::unshare::mount_overlayfs;
-use container_runtime::unshare::run_container;
 use dotenv::dotenv;
-//
+
 fn main() {
     dotenv().ok();
-    // println!("{}", std::env::var("INSTALL_PATH").unwrap());
     let matches = App::new("container-runtime")
         .subcommand(
             SubCommand::with_name("run")
@@ -32,14 +29,10 @@ fn main() {
                 cmd.to_string(),
                 args.iter().map(|s| s.to_string()).collect(),
             );
-            run_container(&debug_container).unwrap();
+            debug_container.start().unwrap();
         }
     } else if let Some(matches) = matches.subcommand_matches("deploy") {
         let path = matches.value_of("PATH").unwrap();
         deploy_container(path);
     }
 }
-
-// fn main() {
-//     mount_overlayfs();
-// }
