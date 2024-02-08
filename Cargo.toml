@@ -8,5 +8,5 @@ edition = "2021"
 [dependencies]
 nix = "0.23"
 libc = "0.2.153"
-clap = {version="2.33"}
+clap = {version = "4.5.0", features=["derive"]}
 dotenv = "0.15.0"
