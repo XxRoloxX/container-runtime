@@ -3,6 +3,8 @@ use std::{
     thread,
 };
 
+use crate::container::Container;
+
 pub struct ContainerRunner {
     pub containers: Vec<Worker>,
     pub sender: Option<mpsc::Sender<Job>>,
@@ -22,6 +24,32 @@ impl ContainerRunner {
             containers: workers,
             sender: Some(sender),
         }
+    }
+
+    // pub unsafe fn create_container(&self, container: Container) {
+    //     let job = Box::new(move || match container.create() {
+    //         Ok(_) => {
+    //             println!("Container {} was created", container)
+    //         }
+    //         Err(err) => {
+    //             println!("Couldn't create {} :{}", container, err)
+    //         }
+    //     });
+    //
+    //     self.sender.as_ref().unwrap().send(job).unwrap();
+    // }
+
+    pub unsafe fn start_container(&self, container: Container) {
+        let job = Box::new(move || match container.start() {
+            Ok(_) => {
+                println!("Container {} was stared", container)
+            }
+            Err(err) => {
+                println!("Couldn't start {} :{}", container, err)
+            }
+        });
+
+        self.sender.as_ref().unwrap().send(job).unwrap();
     }
     pub fn execute<F>(&self, f: F)
     where

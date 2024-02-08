@@ -26,6 +26,7 @@ impl UnixStreamWrapper {
     pub fn connect(&mut self) -> Result<(), String> {
         let socket = UnixStream::connect(self.path.to_string())
             .map_err(|e| format!("Failed to connect to socket {}", e))?;
+
         self.socket = Some(socket);
         Ok(())
     }

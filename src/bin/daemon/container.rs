@@ -1,4 +1,7 @@
-use std::path::Path;
+use std::{
+    fmt::{Display, Error, Formatter},
+    path::Path,
+};
 
 use container_runtime::common::{
     filesystem::{clear_directory, mount_overlayfs, setup_rootfs},
@@ -152,5 +155,11 @@ impl Container {
             Some(path) => Ok(path.to_string()),
             None => Err(format!("Failed to find /proc mount in {}", self.id)),
         }
+    }
+}
+
+impl Display for Container {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
+        write!(f, "Container: {}", self.id)
     }
 }
