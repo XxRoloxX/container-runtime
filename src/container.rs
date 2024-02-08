@@ -1,4 +1,9 @@
-use std::path::{Path, PathBuf};
+use std::{
+    ffi::CString,
+    path::{Path, PathBuf},
+};
+
+use nix::mount::umount;
 
 use crate::{
     image::Image,
@@ -25,6 +30,26 @@ impl Container {
     fn get_inner_containers_path(dirname: &str) -> Result<PathBuf, String> {
         let container_path = Self::get_containers_path()?;
         Ok(Path::new(&container_path).join(dirname))
+    }
+    fn get_container_proc_mount(&self) -> Result<String, String> {
+        let merged_overlay_path = self.get_merged_overlayfs_path()?;
+        let proc_mount = Path::new(&merged_overlay_path).join("proc");
+        match proc_mount.to_str() {
+            Some(path) => Ok(path.to_string()),
+            None => Err(format!("Failed to find /proc mount in {}", self.id)),
+        }
+    }
+    pub fn clean_up_on_exit(&self) -> Result<(), String> {
+        let proc_mount = self.get_container_proc_mount()?;
+        let overlay_mount = self.get_merged_overlayfs_path()?;
+
+        umount(proc_mount.as_str())
+            .map_err(|e| format!("Failed to umount /proc on {}: {}", proc_mount, e))?;
+
+        umount(overlay_mount.as_str())
+            .map_err(|e| format!("Failed to umount overlay on {}: {}", overlay_mount, e))?;
+
+        Ok(())
     }
     fn get_inner_overlay_path(&self, dirname: &str) -> Result<String, String> {
         let overlay_path = self.get_overlayfs_path()?;

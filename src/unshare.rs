@@ -1,12 +1,8 @@
 use crate::container::Container;
-use crate::rootfs::setup_rootfs;
-use nix::errno::Errno;
 use nix::sched::{unshare, CloneFlags};
 use nix::sys::wait::waitpid;
 use nix::unistd::{execvp, fork, ForkResult, Pid};
 use std::ffi::CString;
-use std::fs::read_dir;
-use std::path::Path;
 
 pub fn get_install_path() -> Result<String, String> {
     match std::env::var("INSTALL_PATH") {
@@ -27,38 +23,25 @@ pub unsafe fn run_container(container: &Container) -> Result<(), String> {
     match fork() {
         Ok(ForkResult::Parent { child, .. }) => {
             wait_for_child_process(child);
+            container.clean_up_on_exit()?;
             Ok(())
         }
         Ok(ForkResult::Child) => {
             container.setup_rootfs()?;
-            list_files();
             execute_command(
                 &container.command,
                 container.args.iter().map(AsRef::as_ref).collect(),
             )?;
             Ok(())
         }
-        Err(_) => {
-            // fork_failed(err);
-            Err("Failed to fork".to_string())
-        }
+        Err(_) => Err("Failed to fork".to_string()),
     }
 }
 
 fn wait_for_child_process(child: Pid) {
     waitpid(child, None).expect("Failed to wait for child");
 }
-fn fork_failed(err: Errno) {
-    eprintln!("Fork failed! {}", err);
-}
 
-fn list_files() {
-    let paths = read_dir("../").unwrap();
-    for path in paths {
-        let p = path.unwrap().path();
-        println!("Name: {}", p.display());
-    }
-}
 pub fn execute_command(cmd: &str, args: Vec<&str>) -> Result<(), String> {
     let c_cmd = CString::new(cmd).expect("Failed to convert to CString");
     let c_args: Vec<CString> = args
