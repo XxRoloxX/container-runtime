@@ -70,7 +70,3 @@ pub fn run_cli() -> Result<(), String> {
     stream.send_command(args.command.as_ref().unwrap())?;
     Ok(())
 }
-
-pub fn main() {
-    run_cli();
-}

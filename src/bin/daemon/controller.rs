@@ -43,8 +43,8 @@ impl ContainerController {
                 self.runner.start_container(Container::new(
                     container_id,
                     Image::new(image),
-                    "bash".to_string(),
-                    vec![],
+                    "ps".to_string(),
+                    vec!["aux".to_string()],
                 ));
             },
             _ => {

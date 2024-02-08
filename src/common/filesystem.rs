@@ -19,7 +19,11 @@ pub fn setup_rootfs(new_root: &str) -> Result<(), String> {
     Ok(())
 }
 pub fn clear_directory(path: &str) -> Result<(), String> {
-    std::fs::remove_dir_all(path);
+    match std::fs::remove_dir_all(path) {
+        Ok(_) => {}
+        Err(e) => println!("Failed to remove directory at {}: {}", path, e),
+    };
+
     std::fs::create_dir_all(path)
         .map_err(|e| format!("Failed to create direcory at {}: {}", path, e))?;
     Ok(())

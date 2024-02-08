@@ -26,19 +26,6 @@ impl ContainerRunner {
         }
     }
 
-    // pub unsafe fn create_container(&self, container: Container) {
-    //     let job = Box::new(move || match container.create() {
-    //         Ok(_) => {
-    //             println!("Container {} was created", container)
-    //         }
-    //         Err(err) => {
-    //             println!("Couldn't create {} :{}", container, err)
-    //         }
-    //     });
-    //
-    //     self.sender.as_ref().unwrap().send(job).unwrap();
-    // }
-
     pub unsafe fn start_container(&self, container: Container) {
         let job = Box::new(move || match container.start() {
             Ok(_) => {
@@ -60,7 +47,7 @@ impl ContainerRunner {
     }
 }
 
-struct Worker {
+pub struct Worker {
     id: usize,
     thread: Option<thread::JoinHandle<()>>,
 }
