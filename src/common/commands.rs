@@ -1,5 +1,6 @@
 use clap::Subcommand;
-#[derive(Debug, Clone, Subcommand)]
+use serde::{Deserialize, Serialize};
+#[derive(Debug, Clone, Subcommand, Serialize, Deserialize)]
 pub enum ContainerCommand {
     /// Start a container
     Start {
