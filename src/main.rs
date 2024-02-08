@@ -1,7 +1,5 @@
 use clap::{App, Arg, SubCommand};
-use container_runtime::container::Container;
-use container_runtime::deployment::deploy_container;
-use container_runtime::image::Image;
+use container_runtime::daemon::{container::Container, deployment::deploy_container, image::Image};
 use dotenv::dotenv;
 
 fn main() {

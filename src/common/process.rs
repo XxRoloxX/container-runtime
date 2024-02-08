@@ -8,33 +8,6 @@ pub fn get_install_path() -> Result<String, String> {
         Err(_) => Err("INSTALL_PATH not set".to_string()),
     }
 }
-// pub unsafe fn run_container(container: &Container) -> Result<(), String> {
-//     container.mount_overlayfs()?;
-//     unshare(
-//         CloneFlags::CLONE_NEWPID
-//             | CloneFlags::CLONE_NEWNS
-//             | CloneFlags::CLONE_NEWUTS
-//             | CloneFlags::CLONE_NEWNET,
-//     )
-//     .expect("Failed to unshare");
-//
-//     match fork() {
-//         Ok(ForkResult::Parent { child, .. }) => {
-//             wait_for_child_process(child);
-//             container.clean_up_on_exit()?;
-//             Ok(())
-//         }
-//         Ok(ForkResult::Child) => {
-//             container.setup_rootfs()?;
-//             execute_command(
-//                 &container.command,
-//                 container.args.iter().map(AsRef::as_ref).collect(),
-//             )?;
-//             Ok(())
-//         }
-//         Err(_) => Err("Failed to fork".to_string()),
-//     }
-// }
 
 pub fn wait_for_child_process(child: Pid) {
     waitpid(child, None).expect("Failed to wait for child");

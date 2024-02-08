@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::unshare::get_install_path;
+use crate::common::process::get_install_path;
 
 pub struct Image {
     id: String,

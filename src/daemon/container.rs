@@ -6,11 +6,12 @@ use nix::{
     unistd::{fork, ForkResult},
 };
 
-use crate::{
-    image::Image,
-    rootfs::{clear_directory, mount_overlayfs, setup_rootfs},
-    unshare::{execute_command, get_install_path, wait_for_child_process},
+use crate::common::{
+    filesystem::{clear_directory, mount_overlayfs, setup_rootfs},
+    process::{execute_command, get_install_path, wait_for_child_process},
 };
+
+use super::image::Image;
 
 pub struct Container {
     id: String,
