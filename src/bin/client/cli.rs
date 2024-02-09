@@ -1,7 +1,5 @@
-use std::{io::Write, os::unix::net::UnixStream};
-
-use clap::{error::Result, Parser};
-use container_runtime::common::{commands::ContainerCommand, socket::SOCKET_PATH};
+use clap::Parser;
+use container_runtime::common::{commands::ContainerCommand, socket::SocketStream};
 use dotenv::dotenv;
 
 #[derive(Parser, Debug)]
@@ -10,45 +8,9 @@ struct Cli {
     command: Option<ContainerCommand>,
 }
 
-struct UnixStreamWrapper {
-    path: String,
-    socket: Option<UnixStream>,
-}
-
-impl UnixStreamWrapper {
-    pub fn new() -> Self {
-        UnixStreamWrapper {
-            path: SOCKET_PATH.to_string(),
-            socket: None,
-        }
-    }
-
-    pub fn connect(&mut self) -> Result<(), String> {
-        let socket = UnixStream::connect(self.path.to_string())
-            .map_err(|e| format!("Failed to connect to socket {}", e))?;
-
-        self.socket = Some(socket);
-        Ok(())
-    }
-    pub fn send_command(&mut self, command: &ContainerCommand) -> Result<(), String> {
-        match &mut self.socket {
-            Some(socket) => {
-                let message = serde_json::to_string(&command)
-                    .map_err(|e| format!("Couldn't serialize command {}", e))?;
-                socket
-                    .write(message.as_bytes())
-                    .map_err(|e| format!("Couldn't send a command: {}", e))?;
-                Ok(())
-            }
-            None => return Err("Not connected to socket!".to_string()),
-        }
-    }
-}
-
-pub fn run_cli() -> Result<(), String> {
+pub fn run_cli(mut stream: Box<dyn SocketStream>) -> Result<(), String> {
     dotenv().ok();
     let args = Cli::parse();
-    let mut stream = UnixStreamWrapper::new();
     stream.connect()?;
     match &args.command {
         Some(ContainerCommand::Start { container_id }) => {

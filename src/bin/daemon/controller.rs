@@ -1,13 +1,13 @@
 use container_runtime::common::commands::ContainerCommand;
 
-use crate::{container::Container, container_runner::ContainerRunner, image::Image};
+use crate::{container::Container, image::Image, runner::Runner};
 
 pub struct ContainerController {
-    runner: ContainerRunner,
+    runner: Runner,
 }
 
 impl ContainerController {
-    pub fn new(runner: ContainerRunner) -> ContainerController {
+    pub fn new(runner: Runner) -> ContainerController {
         ContainerController { runner }
     }
 
