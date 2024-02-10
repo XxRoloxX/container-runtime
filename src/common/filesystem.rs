@@ -1,12 +1,84 @@
 use std::{
-    fs::File,
+    fs::{self, File},
     io::{BufRead, BufReader},
+    os::{
+        linux::fs::MetadataExt,
+        unix::fs::{symlink, FileTypeExt, PermissionsExt},
+    },
+    path::PathBuf,
 };
 
-use nix::mount::{mount, MsFlags};
+use log::{error, info};
+use nix::sys::stat::mknod;
+use nix::sys::stat::Mode;
+use nix::{
+    mount::{mount, MsFlags},
+    sys::stat::SFlag,
+};
 
 fn change_current_dir(path: &str) -> Result<(), String> {
     std::env::set_current_dir(path).map_err(|e| format!("{}", e))?;
+    Ok(())
+}
+pub fn copy_directory(src: &str, dest: &str) -> Result<(), String> {
+    fs::create_dir_all(dest)
+        .map_err(|e| format!("Failed to create directory at {}: {}", dest, e))?;
+
+    for entry in
+        fs::read_dir(src).map_err(|e| format!("Failed to read directory at {}: {}", src, e))?
+    {
+        let entry = entry.map_err(|e| format!("Failed to read entry: {}", e))?;
+        let path = entry.path();
+
+        let file_name = path.file_name().ok_or("Failed to get file name")?;
+        let dest_path = PathBuf::from(dest).join(file_name);
+
+        if path.is_dir() {
+            copy_directory(
+                path.to_str().ok_or("Failed to get file name")?,
+                &dest_path.to_str().ok_or("Failed to get file name")?,
+            )?;
+        } else if path.is_symlink() {
+            //Get only path of the target of the symlink without following the link
+            let link = fs::read_link(&path)
+                .map_err(|e| format!("Failed to read symlink at {}: {}", path.display(), e))?;
+
+            symlink(link, &dest_path).map_err(|e| {
+                format!("Failed to create symlink at {}: {}", dest_path.display(), e)
+            })?;
+        } else {
+            let meta = fs::metadata(&path)
+                .map_err(|e| format!("Failed to get metadata for {}: {}", path.display(), e))?;
+
+            let file_type = meta.file_type();
+
+            if file_type.is_char_device() {
+                // Get Minor and Major numbers of file devices with stat
+                let st_dev = meta.st_rdev();
+
+                let major = nix::sys::stat::major(st_dev);
+                let minor = nix::sys::stat::minor(st_dev);
+                let permissions = Mode::from_bits_truncate(meta.st_mode());
+                let flags = SFlag::S_IFCHR;
+
+                let dev = nix::sys::stat::makedev(major, minor);
+
+                mknod(&dest_path, flags, permissions, dev).map_err(|e| {
+                    format!(
+                        "Failed to create device file at {}: {}",
+                        dest_path.display(),
+                        e
+                    )
+                })?;
+            } else {
+                fs::copy(path.clone(), &dest_path).map_err(|e| {
+                    format!("Failed to copy file from {} to : {}", path.display(), e)
+                })?;
+            }
+        }
+        info!("Copied {} to {}", path.display(), dest_path.display());
+    }
+
     Ok(())
 }
 
@@ -21,7 +93,7 @@ pub fn setup_rootfs(new_root: &str) -> Result<(), String> {
 pub fn clear_directory(path: &str) -> Result<(), String> {
     match std::fs::remove_dir_all(path) {
         Ok(_) => {}
-        Err(e) => println!("Failed to remove directory at {}: {}", path, e),
+        Err(e) => error!("Failed to remove directory at {}: {}", path, e),
     };
 
     std::fs::create_dir_all(path)
