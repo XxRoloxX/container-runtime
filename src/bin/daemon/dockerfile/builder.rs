@@ -24,7 +24,7 @@ impl ImageBuilder {
     }
 
     fn copy_base_image(image: &Image) -> Result<(), String> {
-        let base_image = Image::new("debian".to_string());
+        let base_image = Image::new("base".to_string());
         let base_image_path = base_image.get_image_path()?;
         let destination_path = image.get_image_path()?;
         copy_directory(base_image_path.as_str(), destination_path.as_str())?;

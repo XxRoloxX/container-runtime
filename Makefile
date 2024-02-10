@@ -8,7 +8,10 @@ run_bash:
 	sudo ./target/debug/container-runtime run /bin/bash
 
 run_daemon:
-	cargo build && sudo ./target/debug/daemon 
+	cargo build && sudo RUST_LOG=info ./target/debug/daemon 
 run_client:
-	cargo build && sudo ./target/debug/client $(ARGS)
+	cargo build && sudo RUST_LOG=info ./target/debug/client $(ARGS)
+
+start_container:
+	cargo build && sudo RUST_LOG=info ./target/debug/client start  new_container new_image4 ps aux
 

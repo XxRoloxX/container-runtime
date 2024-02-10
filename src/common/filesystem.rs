@@ -33,12 +33,7 @@ pub fn copy_directory(src: &str, dest: &str) -> Result<(), String> {
         let file_name = path.file_name().ok_or("Failed to get file name")?;
         let dest_path = PathBuf::from(dest).join(file_name);
 
-        if path.is_dir() {
-            copy_directory(
-                path.to_str().ok_or("Failed to get file name")?,
-                &dest_path.to_str().ok_or("Failed to get file name")?,
-            )?;
-        } else if path.is_symlink() {
+        if path.is_symlink() {
             //Get only path of the target of the symlink without following the link
             let link = fs::read_link(&path)
                 .map_err(|e| format!("Failed to read symlink at {}: {}", path.display(), e))?;
@@ -46,6 +41,11 @@ pub fn copy_directory(src: &str, dest: &str) -> Result<(), String> {
             symlink(link, &dest_path).map_err(|e| {
                 format!("Failed to create symlink at {}: {}", dest_path.display(), e)
             })?;
+        } else if path.is_dir() {
+            copy_directory(
+                path.to_str().ok_or("Failed to get file name")?,
+                &dest_path.to_str().ok_or("Failed to get file name")?,
+            )?;
         } else {
             let meta = fs::metadata(&path)
                 .map_err(|e| format!("Failed to get metadata for {}: {}", path.display(), e))?;
@@ -76,6 +76,7 @@ pub fn copy_directory(src: &str, dest: &str) -> Result<(), String> {
                 })?;
             }
         }
+
         info!("Copied {} to {}", path.display(), dest_path.display());
     }
 

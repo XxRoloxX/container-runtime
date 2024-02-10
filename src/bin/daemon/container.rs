@@ -37,6 +37,7 @@ impl Container {
     }
 
     pub unsafe fn start(&self) -> Result<(), String> {
+        self.create()?;
         self.mount_overlayfs()?;
         unshare(
             CloneFlags::CLONE_NEWPID
