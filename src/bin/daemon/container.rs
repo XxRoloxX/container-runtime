@@ -5,6 +5,7 @@ use std::{
 
 use container_runtime::common::{
     filesystem::{clear_directory, mount_overlayfs, setup_rootfs},
+    image::Image,
     process::{execute_command, get_install_path, wait_for_child_process},
 };
 use nix::{
@@ -12,8 +13,6 @@ use nix::{
     sched::{unshare, CloneFlags},
     unistd::{fork, ForkResult},
 };
-
-use super::image::Image;
 
 pub struct Container {
     id: String,
@@ -30,6 +29,11 @@ impl Container {
             command,
             args,
         }
+    }
+
+    pub fn create(&self) -> Result<(), String> {
+        self.prepare_container_directories()?;
+        Ok(())
     }
 
     pub unsafe fn start(&self) -> Result<(), String> {

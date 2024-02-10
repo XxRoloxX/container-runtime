@@ -1,22 +1,26 @@
 use container_runtime::common::socket::get_socket_listener;
 use dotenv::dotenv;
+use log::{error, info};
 
 pub mod container;
-pub mod controller;
+pub mod controllers;
 pub mod deployment;
-pub mod image;
+pub mod dockerfile;
+pub mod registry;
+pub mod router;
 pub mod runner;
 pub mod server;
 
 fn main() {
     println!("Running server");
     dotenv().ok();
+    env_logger::init();
     match server::run_server(get_socket_listener()) {
         Ok(_) => {
-            println!("All good")
+            info!("Server was started");
         }
         Err(err) => {
-            println!("Shit {}", err)
+            error!("Couldn't start server: {}", err);
         }
     };
 }

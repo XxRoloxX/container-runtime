@@ -1,9 +1,11 @@
 use std::path::Path;
 
-use container_runtime::common::process::get_install_path;
+use serde::{Deserialize, Serialize};
 
+use super::process::get_install_path;
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Image {
-    id: String,
+    pub id: String,
 }
 
 impl Image {

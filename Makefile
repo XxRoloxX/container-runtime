@@ -6,3 +6,9 @@ run_rust:
 
 run_bash:
 	sudo ./target/debug/container-runtime run /bin/bash
+
+run_daemon:
+	cargo build && sudo ./target/debug/daemon 
+run_client:
+	cargo build && sudo ./target/debug/client $(ARGS)
+

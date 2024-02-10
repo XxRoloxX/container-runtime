@@ -3,6 +3,8 @@ use std::{
     thread,
 };
 
+use log::info;
+
 pub struct ThreadPool {
     pub workers: Vec<Worker>,
     pub sender: Option<mpsc::Sender<Job>>,
@@ -46,12 +48,11 @@ impl Worker {
             let message = receiver.lock().unwrap().recv();
             match message {
                 Ok(job) => {
-                    println!("Worker {id} got a job; executing");
+                    info!("Worker {id} got a job; executing");
                     job();
                 }
                 Err(e) => {
-                    println!("{}", e);
-                    println!("Worker {id} disconnected; shutting down");
+                    info!("Worker {id} disconnected; shutting down {e}");
                     break;
                 }
             }
@@ -68,7 +69,7 @@ impl Drop for ThreadPool {
     fn drop(&mut self) {
         drop(self.sender.take());
         for worker in &mut self.workers {
-            println!("Shutting down worker {}", worker.id);
+            info!("Shutting down worker {}", worker.id);
             if let Some(thread) = worker.thread.take() {
                 thread.join().unwrap();
             }

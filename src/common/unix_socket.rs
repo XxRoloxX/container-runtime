@@ -1,5 +1,5 @@
 use super::commands::ContainerCommand;
-use super::socket::{SocketListener, SocketStream};
+use super::socket::{ConnectionHandler, SocketListener, SocketStream};
 use clap::error::Result;
 use nix::unistd::unlink;
 use std::io::{Read, Write};
@@ -42,8 +42,9 @@ impl SocketListener for UnixSocketListener {
 
         Ok(())
     }
-    fn listen(&mut self, handle_connection: Box<dyn Fn(Vec<u8>)>) -> Result<(), String> {
+    fn listen(&mut self, handle_connection: &mut ConnectionHandler) -> Result<(), String> {
         let listener = self.get_listener()?;
+
         for stream in listener.incoming() {
             let mut connection = stream.map_err(|e| format!("Connection faield {}", e))?;
             println!("Got connection");

@@ -1,6 +1,7 @@
 use clap::Parser;
 use container_runtime::common::{commands::ContainerCommand, socket::SocketStream};
 use dotenv::dotenv;
+use log::{error, info};
 
 #[derive(Parser, Debug)]
 struct Cli {
@@ -13,20 +14,40 @@ pub fn run_cli(mut stream: Box<dyn SocketStream>) -> Result<(), String> {
     let args = Cli::parse();
     stream.connect()?;
     match &args.command {
-        Some(ContainerCommand::Start { container_id }) => {
-            println!("Starting container: {}", container_id);
+        Some(ContainerCommand::Start {
+            image,
+            container_id,
+            command,
+            args,
+        }) => {
+            info!(
+                "Starting container: {}, {}, {}, {}",
+                container_id,
+                image,
+                command,
+                args.join(" ")
+            );
         }
         Some(ContainerCommand::Stop { container_id }) => {
-            println!("Stopping container: {}", container_id);
+            info!("Stopping container: {}", container_id);
         }
         Some(ContainerCommand::Create {
             container_id,
             image,
         }) => {
-            println!("Creating container: {} with image: {}", container_id, image);
+            info!("Creating container: {} with image: {}", container_id, image);
+        }
+        Some(ContainerCommand::Build {
+            image_id,
+            dockerfile,
+        }) => {
+            info!(
+                "Building image: {} with Dockerfile: {}",
+                image_id, dockerfile
+            );
         }
         None => {
-            println!("No command provided");
+            error!("No command provided");
         }
     }
     stream.send_command(args.command.as_ref().unwrap())?;
