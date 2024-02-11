@@ -1,6 +1,6 @@
 use super::parse_command;
 use crate::controllers::Controller;
-use crate::dockerfile::builder::ImageBuilder;
+use crate::image_builder::builder::ImageBuilder;
 use container_runtime::common::commands::ContainerCommand;
 use container_runtime::common::image::Image;
 use log::info;

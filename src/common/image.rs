@@ -2,7 +2,7 @@ use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
-use super::process::get_install_path;
+use super::{filesystem::copy_directory, process::get_install_path};
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Image {
     pub id: String,
@@ -25,5 +25,13 @@ impl Image {
             )),
             Some(path) => Ok(path.to_string()),
         }
+    }
+
+    pub fn clone_image_contents(&self, destination_image: &Image) -> Result<(), String> {
+        let image_path = self.get_image_path()?;
+        let dest_path = destination_image.get_image_path()?;
+
+        copy_directory(image_path.as_str(), dest_path.as_str())?;
+        Ok(())
     }
 }

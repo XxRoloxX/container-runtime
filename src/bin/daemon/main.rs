@@ -7,7 +7,7 @@ use log::{error, info};
 pub mod container;
 pub mod controllers;
 pub mod deployment;
-pub mod dockerfile;
+pub mod image_builder;
 pub mod registry;
 pub mod router;
 pub mod runner;
