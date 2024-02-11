@@ -2,8 +2,9 @@ use std::{
     fs::{self, File},
     io::{BufRead, BufReader},
     os::{
+        fd::AsRawFd,
         linux::fs::MetadataExt,
-        unix::fs::{symlink, FileTypeExt, PermissionsExt},
+        unix::fs::{symlink, FileTypeExt},
     },
     path::PathBuf,
 };
@@ -15,6 +16,8 @@ use nix::{
     mount::{mount, MsFlags},
     sys::stat::SFlag,
 };
+
+use super::socket::CLIENT_SOCKET;
 
 fn change_current_dir(path: &str) -> Result<(), String> {
     std::env::set_current_dir(path).map_err(|e| format!("{}", e))?;
@@ -144,4 +147,14 @@ fn is_proc_mounted() -> bool {
         }
     }
     return false;
+}
+
+pub fn get_file_descriptor(file_path: &str) -> Result<i32, String> {
+    let socket = std::os::unix::net::UnixStream::connect(file_path)
+        .map_err(|e| format!("Failed to open socket file {}: {}", file_path, e))?;
+    Ok(socket.as_raw_fd())
+}
+
+pub fn get_client_socket_file_descriptor() -> Result<i32, String> {
+    get_file_descriptor(CLIENT_SOCKET)
 }

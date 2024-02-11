@@ -4,10 +4,16 @@ use std::{
 };
 
 use container_runtime::common::{
-    filesystem::{clear_directory, mount_overlayfs, setup_rootfs},
+    filesystem::{
+        clear_directory, get_client_socket_file_descriptor, mount_overlayfs, setup_rootfs,
+    },
     image::Image,
-    process::{execute_command, get_install_path, wait_for_child_process},
+    process::{
+        execute_command, get_install_path, redirect_standard_output, wait_for_child_process,
+    },
+    socket::get_client_socket_stream,
 };
+use log::info;
 use nix::{
     mount::umount,
     sched::{unshare, CloneFlags},
@@ -37,6 +43,7 @@ impl Container {
     }
 
     pub unsafe fn start(&self) -> Result<(), String> {
+        // println!("Starting container {}", self.id);
         self.create()?;
         self.mount_overlayfs()?;
         unshare(
@@ -51,10 +58,12 @@ impl Container {
             Ok(ForkResult::Parent { child, .. }) => {
                 wait_for_child_process(child);
                 self.clean_up_on_exit()?;
+                info!("Container {} exited", self.id);
                 Ok(())
             }
             Ok(ForkResult::Child) => {
                 self.setup_rootfs()?;
+
                 execute_command(&self.command, self.args.iter().map(AsRef::as_ref).collect())?;
                 Ok(())
             }

@@ -20,8 +20,16 @@ pub fn execute_command(cmd: &str, args: Vec<&str>) -> Result<(), String> {
         .map(|arg| CString::new(*arg).expect("Failed to convert to CString"))
         .collect();
     let c_args_refs: Vec<&std::ffi::CStr> = c_args.iter().map(AsRef::as_ref).collect();
-    println!("Running command: {}", cmd);
-    println!("Args: {:?}", &c_args_refs);
     execvp(&c_cmd, &c_args_refs).map_err(|e| format!("Failed to execute command:{} {}", cmd, e))?;
+    Ok(())
+}
+
+pub fn redirect_standard_output(output_file_descriptor: i32) -> Result<(), String> {
+    nix::unistd::dup2(output_file_descriptor, nix::libc::STDOUT_FILENO).map_err(|e| {
+        format!(
+            "Failed to redirect stdout {}: {}",
+            output_file_descriptor, e
+        )
+    })?;
     Ok(())
 }

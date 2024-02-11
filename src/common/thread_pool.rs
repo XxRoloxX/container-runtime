@@ -49,11 +49,12 @@ impl Worker {
             match message {
                 Ok(job) => {
                     info!("Worker {id} got a job; executing");
+                    println!("Worker {id} got a job; executing");
                     job();
                 }
                 Err(e) => {
                     info!("Worker {id} disconnected; shutting down {e}");
-                    break;
+                    // break;
                 }
             }
         });

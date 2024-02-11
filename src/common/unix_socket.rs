@@ -1,12 +1,12 @@
 use super::commands::ContainerCommand;
 use super::socket::{ConnectionHandler, SocketListener, SocketStream};
 use clap::error::Result;
+use log::info;
 use nix::unistd::unlink;
 use std::io::{Read, Write};
+use std::os::fd::AsRawFd;
 use std::os::unix::net::UnixListener;
 use std::os::unix::net::UnixStream;
-
-pub static SOCKET_PATH: &'static str = "/tmp/rust.sock";
 
 pub struct UnixSocketListener {
     addr: String,
@@ -14,9 +14,9 @@ pub struct UnixSocketListener {
 }
 
 impl UnixSocketListener {
-    pub fn new() -> Self {
+    pub fn new(addr: &str) -> Self {
         UnixSocketListener {
-            addr: SOCKET_PATH.to_string(),
+            addr: addr.to_string(),
             listener: None,
         }
     }
@@ -35,7 +35,7 @@ impl SocketListener for UnixSocketListener {
     fn prepare_socket(&mut self) -> Result<(), String> {
         unlink(self.addr.as_str()).unwrap_or_default();
 
-        let listener = UnixListener::bind(SOCKET_PATH)
+        let listener = UnixListener::bind(self.addr.as_str())
             .map_err(|e| format!("Failed to create listener: {}", e))?;
 
         self.listener = Some(listener);
@@ -47,7 +47,7 @@ impl SocketListener for UnixSocketListener {
 
         for stream in listener.incoming() {
             let mut connection = stream.map_err(|e| format!("Connection faield {}", e))?;
-            println!("Got connection");
+            info!("Got connection");
             let mut buf: [u8; 100] = [0u8; 100];
 
             let read_bytes = connection
@@ -64,25 +64,26 @@ impl SocketListener for UnixSocketListener {
 }
 
 pub struct UnixSocketStream {
-    path: String,
+    addr: String,
     socket: Option<UnixStream>,
 }
 
 impl UnixSocketStream {
-    pub fn new() -> Self {
+    pub fn new(addr: &str) -> Self {
         UnixSocketStream {
-            path: SOCKET_PATH.to_string(),
+            addr: addr.to_string(),
             socket: None,
         }
     }
 }
 impl SocketStream for UnixSocketStream {
-    fn connect(&mut self) -> Result<(), String> {
-        let socket = UnixStream::connect(self.path.to_string())
+    fn connect(&mut self) -> Result<i32, String> {
+        let socket = UnixStream::connect(self.addr.to_string())
             .map_err(|e| format!("Failed to connect to socket {}", e))?;
 
+        let fd = socket.as_raw_fd();
         self.socket = Some(socket);
-        Ok(())
+        Ok(fd)
     }
     fn send_command(&mut self, command: &ContainerCommand) -> Result<(), String> {
         match &mut self.socket {

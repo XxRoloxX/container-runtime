@@ -18,6 +18,10 @@ pub fn route_message(runner: &mut Runner, buf: Vec<u8>) {
         }
     };
 
+    // if !runner.is_output_socket_initialized() {
+    //     runner.init_output_socket().unwrap();
+    // }
+
     let controller: Box<dyn Controller> = match command {
         ContainerCommand::Build { .. } => Box::from(BuildImageController::new()),
         ContainerCommand::Start { .. } => Box::from(StartContainerController::new(runner)),
