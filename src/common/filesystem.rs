@@ -88,9 +88,22 @@ pub fn copy_directory(src: &str, dest: &str) -> Result<(), String> {
 
 pub fn setup_rootfs(new_root: &str) -> Result<(), String> {
     change_current_dir(new_root)?;
+    // let old_root = PathBuf::from(new_root).join("old_root");
+    // let old_root_path = old_root.to_str().ok_or("Failed to get old root path")?;
+    // nix::unistd::mkdir(old_root_path, nix::sys::stat::Mode::S_IRWXU)
+    //     .map_err(|e| format!("Failed to create directory at {}: {}", old_root_path, e))?;
+    //
+    // nix::unistd::pivot_root(new_root, old_root_path)
+    //     .map_err(|e| format!("Failed to pivot_root into {}: {}", new_root, e))?;
+    //
+    // // unmount old root
+    // nix::mount::umount2(old_root_path, nix::mount::MntFlags::MNT_DETACH)
+    //     .map_err(|e| format!("Failed to unmount old root: {}", e))?;
+
     nix::unistd::chroot(new_root)
         .map_err(|e| format!("Failed to chroot into {}: {}", new_root, e))?;
     change_current_dir("/")?;
+
     mount_proc();
     Ok(())
 }
