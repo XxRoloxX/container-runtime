@@ -54,7 +54,7 @@ impl Worker {
                 }
                 Err(e) => {
                     info!("Worker {id} disconnected; shutting down {e}");
-                    // break;
+                    break;
                 }
             }
         });

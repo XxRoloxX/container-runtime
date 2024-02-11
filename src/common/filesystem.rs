@@ -19,7 +19,7 @@ use nix::{
 
 use super::socket::CLIENT_SOCKET;
 
-fn change_current_dir(path: &str) -> Result<(), String> {
+pub fn change_current_dir(path: &str) -> Result<(), String> {
     std::env::set_current_dir(path).map_err(|e| format!("{}", e))?;
     Ok(())
 }

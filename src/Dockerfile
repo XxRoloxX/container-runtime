@@ -1,3 +1,4 @@
-FROM build_image3
-COPY /home/wieslaw/RustProjects/befunge93/ /home
-RUN mkdir /even_better_directory && cd /even_better_directory && touch file4.txt && ls /home
+FROM base
+COPY /home/wieslaw/RustProjects/container-runtime/ /home
+RUN chmod +x /home/even.sh
+RUN chmod +x /home/odd.sh
