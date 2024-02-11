@@ -12,6 +12,9 @@ run_daemon:
 run_client:
 	cargo build && sudo RUST_LOG=info ./target/debug/client $(ARGS)
 
+build_image:
+	cargo build && sudo RUST_LOG=info ./target/debug/client build  $(ARGS)
+
 start_container:
 	cargo build && sudo RUST_LOG=info ./target/debug/client start  new_container new_image4 /bin/bash 
 

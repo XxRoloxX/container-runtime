@@ -65,8 +65,8 @@ pub fn run_cli(mut stream: Box<dyn SocketStream>) -> Result<(), String> {
 //     println!("Got data: {:?}", String::from_utf8(data));
 // }
 
-fn wait_for_program_output(mut socket_listener: Box<dyn SocketListener>) -> Result<(), String> {
-    let mut handler: ConnectionHandler = Box::from(move |data| log_data(data));
-    socket_listener.listen(&mut handler)?;
-    Ok(())
-}
+// fn wait_for_program_output(mut socket_listener: Box<dyn SocketListener>) -> Result<(), String> {
+//     let mut handler: ConnectionHandler = Box::from(move |data| log_data(data));
+//     socket_listener.listen(&mut handler)?;
+//     Ok(())
+// }
