@@ -1,4 +1,4 @@
-use container_runtime::common::socket::get_daemon_socket_listener;
+use container_runtime::common::sockets::get_container_command_listener;
 use dotenv::dotenv;
 use log::{error, info};
 
@@ -13,7 +13,7 @@ fn main() {
     println!("Running server");
     dotenv().ok();
     env_logger::init();
-    match server::run_server(get_daemon_socket_listener()) {
+    match server::run_server(get_container_command_listener()) {
         Ok(_) => {
             info!("Server was started");
         }

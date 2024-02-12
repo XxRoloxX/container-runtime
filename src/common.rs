@@ -1,7 +1,7 @@
 pub mod commands;
+pub mod feedback_commands;
 pub mod filesystem;
 pub mod image;
 pub mod process;
-pub mod socket;
+pub mod sockets;
 pub mod thread_pool;
-pub mod unix_socket;

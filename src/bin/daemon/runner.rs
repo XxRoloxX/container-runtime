@@ -1,6 +1,5 @@
 use container_runtime::common::{
-    process::redirect_standard_output,
-    socket::{get_client_socket_stream, SocketStream},
+    sockets::{ConnectionCommand, SocketStream},
     thread_pool::ThreadPool,
 };
 use log::{error, info};
@@ -22,23 +21,22 @@ impl Runner {
             output_socket_descriptor: None,
         }
     }
-    pub fn init_output_socket(&mut self) -> Result<(), String> {
-        let mut socket_stream = get_client_socket_stream();
-        self.output_socket_descriptor = Some(socket_stream.connect()?);
-        self.output_socket = Some(socket_stream);
-        redirect_standard_output(self.output_socket_descriptor.unwrap())
-            .map_err(|e| format!("Couldn't redirect standard output {}", e))?;
-        Ok(())
-    }
-    pub fn is_output_socket_initialized(&self) -> bool {
-        self.output_socket.is_some()
-    }
-    pub fn get_output_socket_file_descriptor(&self) -> Result<i32, String> {
-        let descriptor = self
-            .output_socket_descriptor
-            .ok_or(format!("Output socket is not initialized"))?;
-        Ok(descriptor)
-    }
+    // pub fn init_output_socket(&mut self) -> Result<(), String> {
+    //     let mut socket_stream = get_client_socket_stream();
+    //     self.output_socket_descriptor = Some(socket_stream.connect()?);
+    //     self.output_socket = Some(socket_stream);
+    //     Ok(())
+    // }
+    // pub fn is_output_socket_initialized(&self) -> bool {
+    //     self.output_socket.is_some()
+    // }
+
+    // pub fn get_output_socket_file_descriptor(&self) -> Result<i32, String> {
+    //     let descriptor = self
+    //         .output_socket_descriptor
+    //         .ok_or(format!("Output socket is not initialized"))?;
+    //     Ok(descriptor)
+    // }
 
     fn start_job(&self, job: Box<dyn FnOnce() + Send + 'static>) -> Result<(), String> {
         let sender = self
@@ -51,6 +49,17 @@ impl Runner {
             .send(job)
             .map_err(|e| format!("Couldn't schedule a job {}", e))?;
 
+        Ok(())
+    }
+    fn send_client_command(&mut self, feedback_command: &ConnectionCommand) -> Result<(), String> {
+        let output_socket = self
+            .output_socket
+            .as_mut()
+            .ok_or(format!("Output socket is not initialized"))?;
+
+        output_socket
+            .send_command(feedback_command)
+            .map_err(|e| format!("Couldn't send command to the client {}", e))?;
         Ok(())
     }
 

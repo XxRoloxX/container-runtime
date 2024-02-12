@@ -1,10 +1,9 @@
 use clap::Parser;
 use container_runtime::common::{
-    commands::ContainerCommand,
-    socket::{get_client_socket_listener, SocketStream},
+    commands::ContainerCommand, sockets::container_commands_socket::ContainerCommandStream,
 };
 use dotenv::dotenv;
-use log::{error, info};
+use log::info;
 
 #[derive(Parser, Debug)]
 struct Cli {
@@ -12,7 +11,7 @@ struct Cli {
     command: Option<ContainerCommand>,
 }
 
-pub fn run_cli(mut stream: Box<dyn SocketStream>) -> Result<(), String> {
+pub fn run_cli(mut stream: Box<ContainerCommandStream>) -> Result<(), String> {
     dotenv().ok();
     let args = Cli::parse();
     stream.connect()?;
@@ -24,8 +23,22 @@ pub fn run_cli(mut stream: Box<dyn SocketStream>) -> Result<(), String> {
 
     info!("{}", args.command.as_ref().unwrap());
 
-    let mut socket_listener = get_client_socket_listener();
-    socket_listener.prepare_socket()?;
+    // let mut socket_listener = get_client_socket_listener();
+    // socket_listener.prepare_socket()?;
     stream.send_command(args.command.as_ref().unwrap())?;
+
     Ok(())
 }
+//
+// pub fn wait_for_unix_socket_message() -> Result<(), String> {
+//     let mut socket_listener = get_client_socket_listener();
+//     socket_listener.prepare_socket()?;
+//
+//     let mut handle_connection: ConnectionHandler = Box::from(|buffer: Vec<u8>| {
+//         let message = String::from_utf8(buffer).unwrap();
+//         info!("Received message: {}", message);
+//     });
+//
+//     socket_listener.listen(&mut handle_connection)?;
+//     Ok(())
+// }

@@ -1,5 +1,3 @@
-use super::commands::ContainerCommand;
-use super::socket::{ConnectionHandler, SocketListener, SocketStream};
 use clap::error::Result;
 use log::info;
 use nix::unistd::unlink;
@@ -7,6 +5,8 @@ use std::io::{Read, Write};
 use std::os::fd::AsRawFd;
 use std::os::unix::net::UnixListener;
 use std::os::unix::net::UnixStream;
+
+use super::{ConnectionCommand, ConnectionHandler, SocketListener, SocketStream};
 
 pub struct UnixSocketListener {
     addr: String,
@@ -85,14 +85,18 @@ impl SocketStream for UnixSocketStream {
         self.socket = Some(socket);
         Ok(fd)
     }
-    fn send_command(&mut self, command: &ContainerCommand) -> Result<(), String> {
+    fn send_command(&mut self, command: &ConnectionCommand) -> Result<(), String> {
         match &mut self.socket {
             Some(socket) => {
-                let message = serde_json::to_string(&command)
-                    .map_err(|e| format!("Couldn't serialize command {}", e))?;
+                // let message = serde_json::to_string(&command)
+                // .map_err(|e| format!("Couldn't serialize command {}", e))?;
+
+                // socket
+                //     .write(message.as_bytes())
+                //     .map_err(|e| format!("Couldn't send a command: {}", e))?;
 
                 socket
-                    .write(message.as_bytes())
+                    .write(command)
                     .map_err(|e| format!("Couldn't send a command: {}", e))?;
                 Ok(())
             }

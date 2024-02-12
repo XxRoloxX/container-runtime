@@ -17,8 +17,6 @@ use nix::{
     sys::stat::SFlag,
 };
 
-use super::socket::CLIENT_SOCKET;
-
 pub fn change_current_dir(path: &str) -> Result<(), String> {
     std::env::set_current_dir(path).map_err(|e| format!("{}", e))?;
     Ok(())
@@ -168,6 +166,6 @@ pub fn get_file_descriptor(file_path: &str) -> Result<i32, String> {
     Ok(socket.as_raw_fd())
 }
 
-pub fn get_client_socket_file_descriptor() -> Result<i32, String> {
-    get_file_descriptor(CLIENT_SOCKET)
-}
+// pub fn get_client_socket_file_descriptor() -> Result<i32, String> {
+//     get_file_descriptor(CLIENT_SOCKET)
+// }

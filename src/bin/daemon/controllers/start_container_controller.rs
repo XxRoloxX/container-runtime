@@ -1,4 +1,3 @@
-use super::parse_command;
 use crate::controllers::Controller;
 use crate::{container::Container, runner::Runner};
 use container_runtime::common::commands::ContainerCommand;
@@ -13,10 +12,8 @@ impl StartContainerController<'_> {
         StartContainerController { runner }
     }
 }
-impl Controller for StartContainerController<'_> {
-    fn handle_connection(&self, buf: Vec<u8>) -> Result<(), String> {
-        let command = parse_command(&buf)?;
-
+impl Controller<ContainerCommand> for StartContainerController<'_> {
+    fn handle_connection(&self, command: ContainerCommand) -> Result<(), String> {
         match command {
             ContainerCommand::Start {
                 container_id,

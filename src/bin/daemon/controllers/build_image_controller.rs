@@ -1,4 +1,3 @@
-use super::parse_command;
 use crate::controllers::Controller;
 use crate::image_builder::builder::ImageBuilder;
 use container_runtime::common::commands::ContainerCommand;
@@ -14,10 +13,8 @@ impl BuildImageController {
         BuildImageController {}
     }
 }
-impl Controller for BuildImageController {
-    fn handle_connection(&self, buf: Vec<u8>) -> Result<(), String> {
-        let command = parse_command(&buf)?;
-
+impl Controller<ContainerCommand> for BuildImageController {
+    fn handle_connection(&self, command: ContainerCommand) -> Result<(), String> {
         match command {
             ContainerCommand::Build {
                 dockerfile,
