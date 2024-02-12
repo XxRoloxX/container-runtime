@@ -1,6 +1,7 @@
 use clap::Parser;
 use container_runtime::common::{
-    commands::ContainerCommand, sockets::container_commands_socket::ContainerCommandStream,
+    commands::ContainerCommand,
+    sockets::{container_commands_socket::ContainerCommandStream, SocketStreamWithParser},
 };
 use dotenv::dotenv;
 use log::info;

@@ -1,21 +1,26 @@
-use super::{ConnectionHandler, SocketListener, SocketStream};
+use super::{
+    CommandHandler, ConnectionHandler, SocketListener, SocketListenerWithParser, SocketStream,
+    SocketStreamWithParser,
+};
 use crate::common::commands::ContainerCommand;
 use log::error;
 pub struct ContainerCommandStream(Box<dyn SocketStream>);
 pub struct ContainerCommandListener(Box<dyn SocketListener>);
 
-pub type ContainerCommandHandler = Box<dyn FnMut(ContainerCommand)>;
+// pub type ContainerCommandHandler = Box<dyn FnMut(ContainerCommand)>;
 
 impl ContainerCommandStream {
     pub fn new(socket: Box<dyn SocketStream>) -> ContainerCommandStream {
         ContainerCommandStream(socket)
     }
+}
 
-    pub fn connect(&mut self) -> Result<i32, String> {
+impl SocketStreamWithParser<ContainerCommand> for ContainerCommandStream {
+    fn connect(&mut self) -> Result<i32, String> {
         self.0.connect()
     }
 
-    pub fn send_command(&mut self, command: &ContainerCommand) -> Result<(), String> {
+    fn send_command(&mut self, command: &ContainerCommand) -> Result<(), String> {
         let message = serde_json::to_string(&command)
             .map_err(|e| format!("Couldn't serialize command {}", e))?;
 
@@ -28,12 +33,17 @@ impl ContainerCommandListener {
     pub fn new(socket: Box<dyn SocketListener>) -> ContainerCommandListener {
         ContainerCommandListener(socket)
     }
+}
 
-    pub fn prepare_socket(&mut self) -> Result<(), String> {
+impl SocketListenerWithParser<ContainerCommand> for ContainerCommandListener {
+    fn prepare_socket(&mut self) -> Result<(), String> {
         self.0.prepare_socket()
     }
 
-    pub fn listen(&mut self, mut handle_connection: ContainerCommandHandler) -> Result<(), String> {
+    fn listen(
+        &mut self,
+        mut handle_connection: CommandHandler<ContainerCommand>,
+    ) -> Result<(), String> {
         let mut handler: ConnectionHandler = Box::from(move |data: Vec<u8>| {
             let command = parse_command(&data);
             match command {

@@ -45,3 +45,15 @@ pub fn get_container_command_stream() -> Box<ContainerCommandStream> {
 // pub fn get_client_socket_stream() -> Box<dyn SocketStream> {
 //     Box::new(UnixSocketStream::new(CLIENT_SOCKET))
 // }
+//
+pub type CommandHandler<T> = Box<dyn FnMut(T) + 'static>;
+
+pub trait SocketListenerWithParser<T> {
+    fn prepare_socket(&mut self) -> Result<(), String>;
+    fn listen(&mut self, handle_connection: CommandHandler<T>) -> Result<(), String>;
+}
+
+pub trait SocketStreamWithParser<T> {
+    fn connect(&mut self) -> Result<i32, String>;
+    fn send_command(&mut self, command: &T) -> Result<(), String>;
+}
