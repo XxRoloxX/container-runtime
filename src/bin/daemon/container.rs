@@ -4,14 +4,9 @@ use std::{
 };
 
 use container_runtime::common::{
-    filesystem::{
-        clear_directory, get_client_socket_file_descriptor, mount_overlayfs, setup_rootfs,
-    },
+    filesystem::{clear_directory, mount_overlayfs, setup_rootfs},
     image::Image,
-    process::{
-        execute_command, get_install_path, redirect_standard_output, wait_for_child_process,
-    },
-    socket::get_client_socket_stream,
+    process::{execute_command, get_install_path, wait_for_child_process},
 };
 use log::info;
 use nix::{
