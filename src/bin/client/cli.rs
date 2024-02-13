@@ -1,7 +1,6 @@
 use clap::Parser;
 use container_runtime::common::{
-    commands::ContainerCommand,
-    sockets::{container_commands_socket::ContainerCommandStream, SocketStreamWithParser},
+    commands::ContainerCommand, sockets::container_commands_socket::ContainerCommandStream,
 };
 use dotenv::dotenv;
 use log::info;
@@ -12,7 +11,7 @@ struct Cli {
     command: Option<ContainerCommand>,
 }
 
-pub fn run_cli(mut stream: Box<ContainerCommandStream>) -> Result<(), String> {
+pub fn run_cli(mut stream: ContainerCommandStream) -> Result<(), String> {
     dotenv().ok();
     let args = Cli::parse();
     stream.connect()?;
@@ -26,7 +25,7 @@ pub fn run_cli(mut stream: Box<ContainerCommandStream>) -> Result<(), String> {
 
     // let mut socket_listener = get_client_socket_listener();
     // socket_listener.prepare_socket()?;
-    stream.send_command(args.command.as_ref().unwrap())?;
+    stream.send_command(args.command.unwrap())?;
 
     Ok(())
 }

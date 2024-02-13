@@ -88,13 +88,6 @@ impl SocketStream for UnixSocketStream {
     fn send_command(&mut self, command: &ConnectionCommand) -> Result<(), String> {
         match &mut self.socket {
             Some(socket) => {
-                // let message = serde_json::to_string(&command)
-                // .map_err(|e| format!("Couldn't serialize command {}", e))?;
-
-                // socket
-                //     .write(message.as_bytes())
-                //     .map_err(|e| format!("Couldn't send a command: {}", e))?;
-
                 socket
                     .write(command)
                     .map_err(|e| format!("Couldn't send a command: {}", e))?;
