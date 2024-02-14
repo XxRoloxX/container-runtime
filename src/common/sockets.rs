@@ -14,7 +14,7 @@ pub static DAEMON_SOCKET: &'static str = "/tmp/rust.sock";
 
 pub static CLIENT_SOCKET: &'static str = "/tmp/rust_client.sock";
 
-pub type ConnectionHandler = Box<dyn FnMut(Vec<u8>) + 'static>;
+pub type ConnectionHandler = Box<dyn FnMut(Vec<u8>) -> Result<(), String> + 'static>;
 pub type ConnectionCommand = Vec<u8>;
 
 pub trait SocketStream: Send {

@@ -4,4 +4,5 @@ pub mod image;
 pub mod process;
 pub mod runtime_commands;
 pub mod sockets;
+pub mod strace;
 pub mod thread_pool;

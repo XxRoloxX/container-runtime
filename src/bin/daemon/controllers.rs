@@ -4,5 +4,3 @@ pub mod start_container_controller;
 pub trait Controller<T> {
     fn handle_connection(&mut self, buf: T) -> Result<(), String>;
 }
-
-// pub trait ContainerCommandController = Controller<ContainerCommand>;

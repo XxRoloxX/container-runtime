@@ -5,7 +5,7 @@ use serde::{de::DeserializeOwned, Serialize};
 pub struct GenericCommandStream(Box<dyn SocketStream>);
 pub struct GenericCommandListener(Box<dyn SocketListener>);
 
-pub type CommandHandler<T> = Box<dyn FnMut(T) + 'static>;
+pub type CommandHandler<T> = Box<dyn FnMut(T) -> Result<(), String> + 'static>;
 
 pub trait SocketListenerWithParser<T>
 where
@@ -59,13 +59,12 @@ impl<T: DeserializeOwned + 'static> SocketListenerWithParser<T> for GenericComma
     }
 
     fn listen(&mut self, mut handle_connection: CommandHandler<T>) -> Result<(), String> {
-        let mut handler: ConnectionHandler = Box::from(move |data: Vec<u8>| {
-            let command: Result<T, String> = parse_command(data);
-            match command {
-                Ok(command) => handle_connection(command),
-                Err(err) => error!("{}", err),
-            }
-        });
+        let mut handler: ConnectionHandler =
+            Box::from(move |data: Vec<u8>| -> Result<(), String> {
+                let command = parse_command(data)?;
+                handle_connection(command)?;
+                Ok(())
+            });
 
         self.0.listen(&mut handler)?;
         Ok(())

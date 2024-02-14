@@ -6,16 +6,16 @@ use std::{
 use container_runtime::common::{
     filesystem::{clear_directory, mount_overlayfs, setup_rootfs},
     image::Image,
-    process::{execute_command, get_install_path, wait_for_child_process},
+    process::{container_unshare, execute_command, get_install_path, wait_for_child_process},
+    sockets::container_commands_socket::ContainerCommandStream,
 };
 use log::info;
 use nix::{
     mount::umount,
-    sched::{unshare, CloneFlags},
     unistd::{fork, ForkResult, Pid},
 };
 
-pub type ContainerStartCallback = Box<dyn FnOnce(Pid) + Send + 'static>;
+pub type ContainerCallback = Box<dyn FnOnce(Pid) -> Result<(), String> + Send + 'static>;
 
 #[derive(Debug, Clone)]
 pub struct Container {
@@ -23,6 +23,12 @@ pub struct Container {
     image: Box<Image>,
     pub command: String,
     pub args: Vec<String>,
+}
+
+pub struct ContainerLifetime {
+    pub socket: ContainerCommandStream,
+    pub on_start: Option<ContainerCallback>,
+    pub on_exit: Option<ContainerCallback>,
 }
 
 impl Container {
@@ -40,34 +46,33 @@ impl Container {
         Ok(())
     }
 
-    // Start the container and return the pid of the child process
-    pub unsafe fn start(&self, callback: ContainerStartCallback) -> Result<Pid, String> {
+    pub unsafe fn start(
+        &self,
+        on_start: Option<ContainerCallback>,
+        on_exit: Option<ContainerCallback>,
+    ) -> Result<Pid, String> {
         self.create()?;
         self.mount_overlayfs()?;
-        unshare(
-            CloneFlags::CLONE_NEWPID
-                | CloneFlags::CLONE_NEWNS
-                | CloneFlags::CLONE_NEWUTS
-                | CloneFlags::CLONE_NEWNET,
-        )
-        .expect("Failed to unshare");
+        container_unshare()?;
 
         match fork() {
             Ok(ForkResult::Parent { child, .. }) => {
-                callback(child);
+                on_start.map(|callback| callback(child));
                 wait_for_child_process(child);
                 self.clean_up_on_exit()?;
                 info!("Container {} exited", self.id);
+                on_exit.map(|callback| callback(child));
                 Ok(child)
             }
             Ok(ForkResult::Child) => {
                 self.setup_rootfs()?;
-                execute_command(&self.command, self.args.iter().map(AsRef::as_ref).collect())?;
+                execute_command(&self.command, self.args.clone())?;
                 Ok(Pid::from_raw(0))
             }
             Err(_) => Err("Failed to fork".to_string()),
         }
     }
+
     fn clean_up_on_exit(&self) -> Result<(), String> {
         let proc_mount = self.get_container_proc_mount()?;
         let overlay_mount = self.get_merged_overlayfs_path()?;

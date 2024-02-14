@@ -56,7 +56,7 @@ impl SocketListener for UnixSocketListener {
 
             let trimmed_buffer = buf[0..read_bytes].to_vec();
 
-            handle_connection(trimmed_buffer);
+            handle_connection(trimmed_buffer)?;
         }
 
         Ok(())

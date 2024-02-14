@@ -6,9 +6,11 @@ use container_runtime::common::{
         container_commands_socket::ContainerCommandStream,
         generic_sockets_with_parsers::CommandHandler, get_client_socket_listener,
     },
+    strace::run_strace,
 };
 use dotenv::dotenv;
 use log::info;
+use nix::unistd::Pid;
 
 #[derive(Parser, Debug)]
 struct Cli {
@@ -29,18 +31,29 @@ pub fn run_cli(mut stream: ContainerCommandStream) -> Result<(), String> {
     info!("{}", args.command.as_ref().unwrap());
 
     stream.send_command(args.command.unwrap())?;
-    wait_for_unix_socket_message()?;
+
+    listen_for_daemon_response()?;
 
     Ok(())
 }
 
-pub fn wait_for_unix_socket_message() -> Result<(), String> {
+pub fn listen_for_daemon_response() -> Result<(), String> {
     let mut socket_listener = get_client_socket_listener();
     socket_listener.prepare_socket()?;
 
     let handle_connection: CommandHandler<FeedbackCommand> =
         Box::from(|command: FeedbackCommand| {
             info!("Received message: {}", command);
+            match command {
+                FeedbackCommand::ContainerStarted { pid, .. } => run_strace(Pid::from_raw(pid)),
+                FeedbackCommand::ContainerExited { name, .. } => {
+                    return Err(format!("Container {} exited", name).to_string());
+                }
+                _ => {
+                    return Err("Unknown command".to_string());
+                }
+            };
+            Ok(())
         });
 
     socket_listener.listen(handle_connection)?;

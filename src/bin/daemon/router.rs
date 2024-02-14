@@ -1,5 +1,4 @@
 use container_runtime::common::runtime_commands::ContainerCommand;
-use log::error;
 
 use crate::{
     controllers::{
@@ -9,17 +8,15 @@ use crate::{
     runner::Runner,
 };
 
-pub fn route_message(runner: &mut Runner, command: ContainerCommand) {
+pub fn route_message(runner: &mut Runner, command: ContainerCommand) -> Result<(), String> {
     let mut controller: Box<dyn Controller<ContainerCommand>> = match command {
         ContainerCommand::Build { .. } => Box::from(BuildImageController::new()),
         ContainerCommand::Start { .. } => Box::from(StartContainerController::new(runner)),
         _ => {
-            error!("Command not supported by router");
-            return;
+            return Err("Command not supported".to_string());
         }
     };
 
-    if let Err(err) = controller.handle_connection(command) {
-        error!("Error handling connection {}", err);
-    }
+    controller.handle_connection(command)?;
+    Ok(())
 }

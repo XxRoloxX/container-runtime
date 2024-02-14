@@ -142,6 +142,7 @@ dependencies = [
  "libc",
  "log",
  "nix",
+ "regex",
  "serde",
  "serde_json",
 ]

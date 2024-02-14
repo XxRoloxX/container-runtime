@@ -3,10 +3,10 @@ use container_runtime::common::{
     sockets::get_client_socket_stream,
     thread_pool::{Job, ThreadPool},
 };
-use log::{error, info};
+use log::info;
 use nix::unistd::Pid;
 
-use crate::container::{Container, ContainerStartCallback};
+use crate::container::{Container, ContainerCallback};
 
 pub struct Runner {
     pool: ThreadPool,
@@ -33,43 +33,40 @@ impl Runner {
     }
 
     pub unsafe fn start_container(&mut self, container: Container) -> Result<(), String> {
-        let container_id = container.id.clone();
-        let mut output_socket = get_client_socket_stream();
-        output_socket.connect()?;
+        let (start_container_id, exit_container_id) = (container.id.clone(), container.id.clone());
 
-        let send_command_cb: ContainerStartCallback = Box::from(move |pid: Pid| {
-            if let Err(err) = output_socket.send_command(FeedbackCommand::ContainerStarted {
+        let on_start_cb: ContainerCallback = Box::from(move |pid: Pid| {
+            let mut socket = get_client_socket_stream();
+            socket.connect()?;
+            socket.send_command(FeedbackCommand::ContainerStarted {
                 pid: pid.as_raw() as i32,
-                name: container_id,
-            }) {
-                error!("Couldn't send feedback to the client {}", err);
-            }
+                name: start_container_id,
+            })
         });
 
-        let job: Job = Box::new(move || match container.start(send_command_cb) {
-            Ok(_) => {
-                info!("Container {} was executed", container);
-            }
-            Err(err) => {
-                info!("Couldn't start {} :{}", container, err);
-            }
+        let on_exit_cb: ContainerCallback = Box::from(move |pid: Pid| {
+            let mut socket = get_client_socket_stream();
+            socket.connect()?;
+            socket.send_command(FeedbackCommand::ContainerExited {
+                pid: pid.as_raw() as i32,
+                name: exit_container_id,
+            })
         });
+
+        let job: Job =
+            Box::new(
+                move || match container.start(Some(on_start_cb), Some(on_exit_cb)) {
+                    Ok(_) => {
+                        info!("Container {} was executed", container);
+                    }
+                    Err(err) => {
+                        info!("Couldn't start {} :{}", container, err);
+                    }
+                },
+            );
 
         self.start_job(job)?;
 
-        Ok(())
-    }
-
-    pub fn create_container(&self, container: Container) -> Result<(), String> {
-        let job = Box::new(move || match container.create() {
-            Ok(_) => {
-                info!("Container created ")
-            }
-            Err(err) => {
-                error!("Couldn't create container {}", err)
-            }
-        });
-        self.start_job(job)?;
         Ok(())
     }
 }
