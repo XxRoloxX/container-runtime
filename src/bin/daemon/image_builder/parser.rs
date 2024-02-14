@@ -1,3 +1,5 @@
+use std::str::SplitWhitespace;
+
 pub enum DockerfileInstruction {
     FROM(String),
     RUN(String),
@@ -11,26 +13,28 @@ pub fn parse_dockerfile(dockerfile_path: &str) -> Result<Vec<DockerfileInstructi
     let mut instructions = Vec::new();
     for line in dockerfile.lines() {
         let mut parts = line.split_whitespace();
-        match parts.next() {
-            Some("FROM") => {
-                instructions.push(DockerfileInstruction::FROM(parts.collect()));
-            }
-            Some("RUN") => {
-                instructions.push(DockerfileInstruction::RUN(
-                    parts.collect::<Vec<&str>>().join(" "),
-                ));
-            }
-            Some("COPY") => {
-                let source = parts.next().unwrap();
-                let destination = parts.next().unwrap();
-                instructions.push(DockerfileInstruction::COPY(
-                    source.to_string(),
-                    destination.to_string(),
-                ));
-            }
-            Some(any) => return Err(format!("Instruction {} is invalid", any)),
-            None => {}
-        }
+        instructions.push(map_dockerfile_instruction(parts.next().unwrap(), parts)?);
     }
     Ok(instructions)
+}
+
+pub fn map_dockerfile_instruction(
+    instruction: &str,
+    mut values: SplitWhitespace<'_>,
+) -> Result<DockerfileInstruction, String> {
+    match instruction {
+        "FROM" => Ok(DockerfileInstruction::FROM(values.collect())),
+        "RUN" => Ok(DockerfileInstruction::RUN(
+            values.collect::<Vec<&str>>().join(" "),
+        )),
+        "COPY" => {
+            let source = values.next().map_or("", |s| s);
+            let destination = values.next().map_or("", |s| s);
+            Ok(DockerfileInstruction::COPY(
+                source.to_string(),
+                destination.to_string(),
+            ))
+        }
+        _ => Err(format!("Instruction {} is invalid", instruction)),
+    }
 }
