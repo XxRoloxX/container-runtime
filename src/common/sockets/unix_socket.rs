@@ -76,6 +76,7 @@ impl UnixSocketStream {
         }
     }
 }
+
 impl SocketStream for UnixSocketStream {
     fn connect(&mut self) -> Result<i32, String> {
         let socket = UnixStream::connect(self.addr.to_string())

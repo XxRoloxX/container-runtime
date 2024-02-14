@@ -14,7 +14,7 @@ impl BuildImageController {
     }
 }
 impl Controller<ContainerCommand> for BuildImageController {
-    fn handle_connection(&self, command: ContainerCommand) -> Result<(), String> {
+    fn handle_connection(&mut self, command: ContainerCommand) -> Result<(), String> {
         match command {
             ContainerCommand::Build {
                 dockerfile,

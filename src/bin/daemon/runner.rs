@@ -1,15 +1,19 @@
+use std::sync::{Arc, Mutex};
+
 use container_runtime::common::{
-    sockets::{ConnectionCommand, SocketStream},
-    thread_pool::ThreadPool,
+    feedback_commands::FeedbackCommand,
+    sockets::{feedback_commands_socket::FeedbackCommandStream, get_client_socket_stream},
+    thread_pool::{Job, ThreadPool},
 };
 use log::{error, info};
+use nix::unistd::Pid;
 
-use crate::container::Container;
+use crate::container::{Container, ContainerStartCallback};
 
 pub struct Runner {
     pool: ThreadPool,
-    output_socket: Option<Box<dyn SocketStream>>,
-    output_socket_descriptor: Option<i32>,
+    output_socket: Option<FeedbackCommandStream>,
+    // output_socket_descriptor: Option<i32>,
 }
 
 impl Runner {
@@ -18,25 +22,19 @@ impl Runner {
         Runner {
             pool,
             output_socket: None,
-            output_socket_descriptor: None,
+            // output_socket_descriptor: None,
         }
     }
-    // pub fn init_output_socket(&mut self) -> Result<(), String> {
-    //     let mut socket_stream = get_client_socket_stream();
-    //     self.output_socket_descriptor = Some(socket_stream.connect()?);
-    //     self.output_socket = Some(socket_stream);
-    //     Ok(())
-    // }
-    // pub fn is_output_socket_initialized(&self) -> bool {
-    //     self.output_socket.is_some()
-    // }
 
-    // pub fn get_output_socket_file_descriptor(&self) -> Result<i32, String> {
-    //     let descriptor = self
-    //         .output_socket_descriptor
-    //         .ok_or(format!("Output socket is not initialized"))?;
-    //     Ok(descriptor)
-    // }
+    pub fn init_output_socket(&mut self) -> Result<(), String> {
+        let mut socket_stream = get_client_socket_stream();
+        socket_stream.connect()?;
+        self.output_socket = Some(socket_stream);
+        Ok(())
+    }
+    pub fn is_output_socket_initialized(&self) -> bool {
+        self.output_socket.is_some()
+    }
 
     fn start_job(&self, job: Box<dyn FnOnce() + Send + 'static>) -> Result<(), String> {
         let sender = self
@@ -51,7 +49,7 @@ impl Runner {
 
         Ok(())
     }
-    fn send_client_command(&mut self, feedback_command: &ConnectionCommand) -> Result<(), String> {
+    fn send_client_command(&mut self, feedback_command: FeedbackCommand) -> Result<(), String> {
         let output_socket = self
             .output_socket
             .as_mut()
@@ -63,19 +61,31 @@ impl Runner {
         Ok(())
     }
 
-    pub unsafe fn start_container(&self, container: Container) -> Result<(), String> {
-        println!("Before Starting a job");
-        let job = Box::new(move || match container.start() {
-            Ok(_) => {
-                info!("Container {} was stared", container)
-            }
-            Err(err) => {
-                info!("Couldn't start {} :{}", container, err)
+    pub unsafe fn start_container(&mut self, container: Container) -> Result<(), String> {
+        let container_id = container.id.clone();
+        let mut output_socket = get_client_socket_stream();
+        output_socket.connect()?;
+
+        let send_command_cb: ContainerStartCallback = Box::from(move |pid: Pid| {
+            if let Err(err) = output_socket.send_command(FeedbackCommand::ContainerStarted {
+                pid: pid.as_raw() as i32,
+                name: container_id,
+            }) {
+                error!("Couldn't send feedback to the client {}", err);
             }
         });
-        println!("Starting a job");
+
+        let job: Job = Box::new(move || match container.start(send_command_cb) {
+            Ok(_) => {
+                info!("Container {} was stared", container);
+            }
+            Err(err) => {
+                info!("Couldn't start {} :{}", container, err);
+            }
+        });
+
         self.start_job(job)?;
-        println!("After starting a job");
+
         Ok(())
     }
 

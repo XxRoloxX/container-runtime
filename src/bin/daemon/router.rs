@@ -10,11 +10,11 @@ use crate::{
 };
 
 pub fn route_message(runner: &mut Runner, command: ContainerCommand) {
-    // if !runner.is_output_socket_initialized() {
-    //     runner.init_output_socket().unwrap();
-    // }
+    if !runner.is_output_socket_initialized() {
+        runner.init_output_socket().unwrap();
+    }
 
-    let controller: Box<dyn Controller<ContainerCommand>> = match command {
+    let mut controller: Box<dyn Controller<ContainerCommand>> = match command {
         ContainerCommand::Build { .. } => Box::from(BuildImageController::new()),
         ContainerCommand::Start { .. } => Box::from(StartContainerController::new(runner)),
         _ => {

@@ -40,7 +40,7 @@ pub struct Worker {
     thread: Option<thread::JoinHandle<()>>,
 }
 
-type Job = Box<dyn FnOnce() + Send + 'static>;
+pub type Job = Box<dyn FnOnce() + Send + 'static>;
 
 impl Worker {
     pub fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Self {

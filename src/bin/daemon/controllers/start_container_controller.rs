@@ -13,7 +13,7 @@ impl StartContainerController<'_> {
     }
 }
 impl Controller<ContainerCommand> for StartContainerController<'_> {
-    fn handle_connection(&self, command: ContainerCommand) -> Result<(), String> {
+    fn handle_connection(&mut self, command: ContainerCommand) -> Result<(), String> {
         match command {
             ContainerCommand::Start {
                 container_id,

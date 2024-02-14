@@ -3,7 +3,7 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 
 use super::{filesystem::copy_directory, process::get_install_path};
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Image {
     pub id: String,
 }

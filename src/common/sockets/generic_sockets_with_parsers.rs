@@ -1,10 +1,11 @@
+use super::{ConnectionHandler, SocketListener, SocketStream};
 use log::error;
 use serde::{de::DeserializeOwned, Serialize};
 
-use super::{CommandHandler, ConnectionHandler, SocketListener, SocketStream};
-
 pub struct GenericCommandStream(Box<dyn SocketStream>);
 pub struct GenericCommandListener(Box<dyn SocketListener>);
+
+pub type CommandHandler<T> = Box<dyn FnMut(T) + 'static>;
 
 pub trait SocketListenerWithParser<T>
 where
@@ -14,7 +15,7 @@ where
     fn listen(&mut self, handle_connection: CommandHandler<T>) -> Result<(), String>;
 }
 
-pub trait SocketStreamWithParser<T> {
+pub trait SocketStreamWithParser<T>: Send {
     fn connect(&mut self) -> Result<i32, String>;
     fn send_command(&mut self, command: T) -> Result<(), String>
     where
@@ -26,6 +27,8 @@ impl GenericCommandStream {
         GenericCommandStream(socket)
     }
 }
+
+// unsafe impl Sync for GenericCommandStream {}
 
 impl<T: Serialize> SocketStreamWithParser<T> for GenericCommandStream {
     fn connect(&mut self) -> Result<i32, String> {

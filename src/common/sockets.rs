@@ -1,5 +1,6 @@
 use self::{
     container_commands_socket::{ContainerCommandListener, ContainerCommandStream},
+    feedback_commands_socket::{FeedbackCommandListener, FeedbackCommandStream},
     generic_sockets_with_parsers::{GenericCommandListener, GenericCommandStream},
     unix_socket::{UnixSocketListener, UnixSocketStream},
 };
@@ -39,4 +40,13 @@ pub fn get_container_command_stream() -> ContainerCommandStream {
     ))))
 }
 
-pub type CommandHandler<T> = Box<dyn FnMut(T) + 'static>;
+pub fn get_client_socket_listener() -> FeedbackCommandListener {
+    Box::from(GenericCommandListener::new(Box::from(
+        UnixSocketListener::new(CLIENT_SOCKET),
+    )))
+}
+pub fn get_client_socket_stream() -> FeedbackCommandStream {
+    Box::from(GenericCommandStream::new(Box::from(UnixSocketStream::new(
+        CLIENT_SOCKET,
+    ))))
+}

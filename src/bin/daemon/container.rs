@@ -12,11 +12,14 @@ use log::info;
 use nix::{
     mount::umount,
     sched::{unshare, CloneFlags},
-    unistd::{fork, ForkResult},
+    unistd::{fork, ForkResult, Pid},
 };
 
+pub type ContainerStartCallback = Box<dyn FnOnce(Pid) + Send + 'static>;
+
+#[derive(Debug, Clone)]
 pub struct Container {
-    id: String,
+    pub id: String,
     image: Box<Image>,
     pub command: String,
     pub args: Vec<String>,
@@ -37,8 +40,8 @@ impl Container {
         Ok(())
     }
 
-    pub unsafe fn start(&self) -> Result<(), String> {
-        // println!("Starting container {}", self.id);
+    // Start the container and return the pid of the child process
+    pub unsafe fn start(&self, callback: ContainerStartCallback) -> Result<Pid, String> {
         self.create()?;
         self.mount_overlayfs()?;
         unshare(
@@ -51,16 +54,16 @@ impl Container {
 
         match fork() {
             Ok(ForkResult::Parent { child, .. }) => {
+                callback(child);
                 wait_for_child_process(child);
                 self.clean_up_on_exit()?;
                 info!("Container {} exited", self.id);
-                Ok(())
+                Ok(child)
             }
             Ok(ForkResult::Child) => {
                 self.setup_rootfs()?;
-
                 execute_command(&self.command, self.args.iter().map(AsRef::as_ref).collect())?;
-                Ok(())
+                Ok(Pid::from_raw(0))
             }
             Err(_) => Err("Failed to fork".to_string()),
         }
