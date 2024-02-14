@@ -1,8 +1,6 @@
-use std::sync::{Arc, Mutex};
-
 use container_runtime::common::{
     feedback_commands::FeedbackCommand,
-    sockets::{feedback_commands_socket::FeedbackCommandStream, get_client_socket_stream},
+    sockets::get_client_socket_stream,
     thread_pool::{Job, ThreadPool},
 };
 use log::{error, info};
@@ -12,28 +10,12 @@ use crate::container::{Container, ContainerStartCallback};
 
 pub struct Runner {
     pool: ThreadPool,
-    output_socket: Option<FeedbackCommandStream>,
-    // output_socket_descriptor: Option<i32>,
 }
 
 impl Runner {
     pub fn new(size: usize) -> Self {
         let pool = ThreadPool::new(size);
-        Runner {
-            pool,
-            output_socket: None,
-            // output_socket_descriptor: None,
-        }
-    }
-
-    pub fn init_output_socket(&mut self) -> Result<(), String> {
-        let mut socket_stream = get_client_socket_stream();
-        socket_stream.connect()?;
-        self.output_socket = Some(socket_stream);
-        Ok(())
-    }
-    pub fn is_output_socket_initialized(&self) -> bool {
-        self.output_socket.is_some()
+        Runner { pool }
     }
 
     fn start_job(&self, job: Box<dyn FnOnce() + Send + 'static>) -> Result<(), String> {
@@ -47,17 +29,6 @@ impl Runner {
             .send(job)
             .map_err(|e| format!("Couldn't schedule a job {}", e))?;
 
-        Ok(())
-    }
-    fn send_client_command(&mut self, feedback_command: FeedbackCommand) -> Result<(), String> {
-        let output_socket = self
-            .output_socket
-            .as_mut()
-            .ok_or(format!("Output socket is not initialized"))?;
-
-        output_socket
-            .send_command(feedback_command)
-            .map_err(|e| format!("Couldn't send command to the client {}", e))?;
         Ok(())
     }
 
@@ -77,7 +48,7 @@ impl Runner {
 
         let job: Job = Box::new(move || match container.start(send_command_cb) {
             Ok(_) => {
-                info!("Container {} was stared", container);
+                info!("Container {} was executed", container);
             }
             Err(err) => {
                 info!("Couldn't start {} :{}", container, err);

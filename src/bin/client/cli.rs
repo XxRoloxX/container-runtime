@@ -1,11 +1,10 @@
 use clap::Parser;
 use container_runtime::common::{
-    commands::ContainerCommand,
     feedback_commands::FeedbackCommand,
+    runtime_commands::ContainerCommand,
     sockets::{
         container_commands_socket::ContainerCommandStream,
         generic_sockets_with_parsers::CommandHandler, get_client_socket_listener,
-        ConnectionHandler,
     },
 };
 use dotenv::dotenv;
@@ -41,7 +40,6 @@ pub fn wait_for_unix_socket_message() -> Result<(), String> {
 
     let handle_connection: CommandHandler<FeedbackCommand> =
         Box::from(|command: FeedbackCommand| {
-            // let message = String::from_utf8(buffer).unwrap();
             info!("Received message: {}", command);
         });
 

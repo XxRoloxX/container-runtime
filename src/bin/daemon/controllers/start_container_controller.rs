@@ -1,7 +1,7 @@
 use crate::controllers::Controller;
 use crate::{container::Container, runner::Runner};
-use container_runtime::common::commands::ContainerCommand;
 use container_runtime::common::image::Image;
+use container_runtime::common::runtime_commands::ContainerCommand;
 
 pub struct StartContainerController<'a> {
     runner: &'a mut Runner,

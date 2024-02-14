@@ -1,7 +1,7 @@
 use crate::controllers::Controller;
 use crate::image_builder::builder::ImageBuilder;
-use container_runtime::common::commands::ContainerCommand;
 use container_runtime::common::image::Image;
+use container_runtime::common::runtime_commands::ContainerCommand;
 use log::info;
 
 pub struct BuildImageController {
