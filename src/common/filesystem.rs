@@ -17,87 +17,112 @@ use nix::{
     sys::stat::SFlag,
 };
 
+pub enum FileType {
+    Directory,
+    Symlink,
+    Device,
+    File,
+}
+
+impl FileType {
+    pub fn from_path(path: &str) -> Result<FileType, String> {
+        let path = PathBuf::from(path);
+
+        if path.is_symlink() {
+            return Ok(FileType::Symlink);
+        };
+
+        let meta = path.metadata().map_err(|e| {
+            format!(
+                "Failed to get metadata for {}: {}",
+                path.to_str().unwrap(),
+                e
+            )
+        })?;
+
+        if path.is_dir() {
+            Ok(FileType::Directory)
+        } else if meta.file_type().is_char_device() {
+            Ok(FileType::Device)
+        } else {
+            Ok(FileType::File)
+        }
+    }
+}
+
 pub fn change_current_dir(path: &str) -> Result<(), String> {
     std::env::set_current_dir(path).map_err(|e| format!("{}", e))?;
     Ok(())
 }
+
 pub fn copy_directory(src: &str, dest: &str) -> Result<(), String> {
-    fs::create_dir_all(dest)
-        .map_err(|e| format!("Failed to create directory at {}: {}", dest, e))?;
+    match FileType::from_path(src) {
+        Ok(FileType::Symlink) => {
+            copy_symlink(src, dest)?;
+        }
+        Ok(FileType::Device) => {
+            copy_device_file(SFlag::S_IFCHR, src, dest)?;
+        }
+        Ok(FileType::File) => {
+            copy_standard_file(src, dest)?;
+        }
+        Ok(FileType::Directory) => {
+            fs::create_dir_all(dest)
+                .map_err(|e| format!("Failed to create directory at {}: {}", dest, e))?;
 
-    for entry in
-        fs::read_dir(src).map_err(|e| format!("Failed to read directory at {}: {}", src, e))?
-    {
-        let entry = entry.map_err(|e| format!("Failed to read entry: {}", e))?;
-        let path = entry.path();
+            for entry in fs::read_dir(src)
+                .map_err(|e| format!("Failed to read directory at {}: {}", src, e))?
+            {
+                let entry = (entry.map_err(|e| format!("Failed to read entry: {}", e))?).path();
+                let file_name = entry.file_name().ok_or("Failed to get file name")?;
+                let path = entry.to_str().ok_or("Failed to get file name")?;
+                let dest_path_buf = PathBuf::from(dest).join(file_name);
+                let dest_path = dest_path_buf.to_str().ok_or("Failed to get file name")?;
 
-        let file_name = path.file_name().ok_or("Failed to get file name")?;
-        let dest_path = PathBuf::from(dest).join(file_name);
-
-        if path.is_symlink() {
-            //Get only path of the target of the symlink without following the link
-            let link = fs::read_link(&path)
-                .map_err(|e| format!("Failed to read symlink at {}: {}", path.display(), e))?;
-
-            symlink(link, &dest_path).map_err(|e| {
-                format!("Failed to create symlink at {}: {}", dest_path.display(), e)
-            })?;
-        } else if path.is_dir() {
-            copy_directory(
-                path.to_str().ok_or("Failed to get file name")?,
-                &dest_path.to_str().ok_or("Failed to get file name")?,
-            )?;
-        } else {
-            let meta = fs::metadata(&path)
-                .map_err(|e| format!("Failed to get metadata for {}: {}", path.display(), e))?;
-
-            let file_type = meta.file_type();
-
-            if file_type.is_char_device() {
-                // Get Minor and Major numbers of file devices with stat
-                let st_dev = meta.st_rdev();
-
-                let major = nix::sys::stat::major(st_dev);
-                let minor = nix::sys::stat::minor(st_dev);
-                let permissions = Mode::from_bits_truncate(meta.st_mode());
-                let flags = SFlag::S_IFCHR;
-
-                let dev = nix::sys::stat::makedev(major, minor);
-
-                mknod(&dest_path, flags, permissions, dev).map_err(|e| {
-                    format!(
-                        "Failed to create device file at {}: {}",
-                        dest_path.display(),
-                        e
-                    )
-                })?;
-            } else {
-                fs::copy(path.clone(), &dest_path).map_err(|e| {
-                    format!("Failed to copy file from {} to : {}", path.display(), e)
-                })?;
+                copy_directory(path, dest_path)?;
             }
         }
-
-        info!("Copied {} to {}", path.display(), dest_path.display());
+        Err(e) => {
+            return Err(e);
+        }
     }
 
+    info!("Copied {} to {}", src, dest);
+    Ok(())
+}
+
+pub fn copy_symlink(src: &str, dest: &str) -> Result<(), String> {
+    let link =
+        fs::read_link(src).map_err(|e| format!("Failed to read symlink at {}: {}", src, e))?;
+
+    symlink(link, dest).map_err(|e| format!("Failed to create symlink at {}: {}", dest, e))?;
+    Ok(())
+}
+
+pub fn copy_device_file(flag: SFlag, src: &str, dest: &str) -> Result<(), String> {
+    let meta =
+        fs::metadata(src).map_err(|e| format!("Failed to get metadata for {}: {}", src, e))?;
+
+    let st_dev = meta.st_rdev();
+
+    let major = nix::sys::stat::major(st_dev);
+    let minor = nix::sys::stat::minor(st_dev);
+    let permissions = Mode::from_bits_truncate(meta.st_mode());
+
+    let dev = nix::sys::stat::makedev(major, minor);
+
+    mknod(dest, flag, permissions, dev)
+        .map_err(|e| format!("Failed to create device file at {}: {}", dest, e))?;
+    Ok(())
+}
+
+pub fn copy_standard_file(src: &str, dest: &str) -> Result<(), String> {
+    fs::copy(src, dest).map_err(|e| format!("Failed to copy file from {} to : {}", src, e))?;
     Ok(())
 }
 
 pub fn setup_rootfs(new_root: &str) -> Result<(), String> {
     change_current_dir(new_root)?;
-    // let old_root = PathBuf::from(new_root).join("old_root");
-    // let old_root_path = old_root.to_str().ok_or("Failed to get old root path")?;
-    // nix::unistd::mkdir(old_root_path, nix::sys::stat::Mode::S_IRWXU)
-    //     .map_err(|e| format!("Failed to create directory at {}: {}", old_root_path, e))?;
-    //
-    // nix::unistd::pivot_root(new_root, old_root_path)
-    //     .map_err(|e| format!("Failed to pivot_root into {}: {}", new_root, e))?;
-    //
-    // // unmount old root
-    // nix::mount::umount2(old_root_path, nix::mount::MntFlags::MNT_DETACH)
-    //     .map_err(|e| format!("Failed to unmount old root: {}", e))?;
-
     nix::unistd::chroot(new_root)
         .map_err(|e| format!("Failed to chroot into {}: {}", new_root, e))?;
     change_current_dir("/")?;
@@ -165,7 +190,3 @@ pub fn get_file_descriptor(file_path: &str) -> Result<i32, String> {
         .map_err(|e| format!("Failed to open socket file {}: {}", file_path, e))?;
     Ok(socket.as_raw_fd())
 }
-
-// pub fn get_client_socket_file_descriptor() -> Result<i32, String> {
-//     get_file_descriptor(CLIENT_SOCKET)
-// }

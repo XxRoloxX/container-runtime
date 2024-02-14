@@ -34,7 +34,7 @@ pub fn run_strace(pid: Pid) {
 }
 
 pub fn parse_strace_output(output: &str) {
-    let re = Regex::new(r#"write\(\d+, "(?<stdout>.*?), \d+\)"#).unwrap();
+    let re = Regex::new(r#"write\(\d+, "(?<stdout>.*?)", \d+\)"#).unwrap();
     if let Some(matches) = re.captures(output) {
         let stdout = matches["stdout"].to_string();
         let sanitized_stdout = stdout.replace("\\n", "\n");
