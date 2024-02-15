@@ -1,5 +1,6 @@
 use clap::Parser;
 use container_runtime::common::{
+    client_request::{ClientId, ClientRequest},
     feedback_commands::FeedbackCommand,
     runtime_commands::ContainerCommand,
     sockets::{
@@ -24,21 +25,21 @@ pub fn run_cli(mut stream: ContainerCommandStream) -> Result<(), String> {
     stream.connect()?;
     info!("Connected to the deamon");
 
-    args.command
-        .as_ref()
-        .ok_or("No command provided".to_string())?;
+    let command = args.command.ok_or("No command provided".to_string())?;
 
-    info!("{}", args.command.as_ref().unwrap());
+    info!("{}", command);
 
-    stream.send_command(args.command.unwrap())?;
+    let client_request = ClientRequest::new(command);
 
-    listen_for_daemon_response()?;
+    stream.send_command(client_request.clone())?;
+
+    listen_for_daemon_response(client_request.client_id)?;
 
     Ok(())
 }
 
-pub fn listen_for_daemon_response() -> Result<(), String> {
-    let mut socket_listener = get_client_socket_listener();
+pub fn listen_for_daemon_response(client_id: ClientId) -> Result<(), String> {
+    let mut socket_listener = get_client_socket_listener(client_id);
     socket_listener.prepare_socket()?;
 
     let handle_connection: CommandHandler<FeedbackCommand> =
@@ -51,12 +52,10 @@ pub fn listen_for_daemon_response() -> Result<(), String> {
                     Ok(ConnectionStatus::Running)
                 }
                 FeedbackCommand::ContainerExited { name, .. } => {
-                    // return Err(format!("Container {} exited", name).to_string());
                     info!("Container {} exited", name);
                     Ok(ConnectionStatus::Finished)
                 }
                 FeedbackCommand::ImageBuilt { image } => {
-                    // return Err(format!("Image {} built", image.id).to_string());
                     info!("Image {} built", image.id);
                     Ok(ConnectionStatus::Finished)
                 }

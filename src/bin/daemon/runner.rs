@@ -1,4 +1,5 @@
 use container_runtime::common::{
+    client_request::{ClientId, ClientResponse},
     feedback_commands::FeedbackCommand,
     sockets::send_feedback,
     thread_pool::{Job, ThreadPool},
@@ -32,21 +33,34 @@ impl Runner {
         Ok(())
     }
 
-    pub unsafe fn start_container(&mut self, container: Container) -> Result<(), String> {
+    pub unsafe fn start_container(
+        &mut self,
+        container: Container,
+        client_id: ClientId,
+    ) -> Result<(), String> {
         let (start_container_id, exit_container_id) = (container.id.clone(), container.id.clone());
+        let client_id_clone = client_id.clone();
 
         let on_start_cb: ContainerCallback = Box::from(move |pid: Pid| {
-            send_feedback(FeedbackCommand::ContainerStarted {
-                pid: pid.as_raw() as i32,
-                name: start_container_id,
-            })
+            let client_response = ClientResponse::new(
+                client_id,
+                FeedbackCommand::ContainerStarted {
+                    pid: pid.as_raw() as i32,
+                    name: start_container_id.clone(),
+                },
+            );
+            send_feedback(client_response)
         });
 
         let on_exit_cb: ContainerCallback = Box::from(move |pid: Pid| {
-            send_feedback(FeedbackCommand::ContainerExited {
-                pid: pid.as_raw() as i32,
-                name: exit_container_id,
-            })
+            let client_response = ClientResponse::new(
+                client_id_clone,
+                FeedbackCommand::ContainerExited {
+                    pid: pid.as_raw() as i32,
+                    name: exit_container_id.clone(),
+                },
+            );
+            send_feedback(client_response)
         });
 
         let job: Job =

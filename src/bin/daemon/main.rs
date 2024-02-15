@@ -1,4 +1,4 @@
-use container_runtime::common::sockets::get_container_command_listener;
+use container_runtime::common::sockets::{cleanup_sockets, get_container_command_listener};
 use dotenv::dotenv;
 use log::{error, info};
 

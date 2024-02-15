@@ -1,4 +1,5 @@
 use container_runtime::common::{
+    client_request::{ClientId, ClientResponse},
     feedback_commands::FeedbackCommand,
     filesystem::{change_current_dir, clear_directory, copy_directory},
     image::Image,
@@ -20,7 +21,7 @@ impl ImageBuilder {
         ImageBuilder {}
     }
 
-    pub fn build(dockerfile: &str, image: &Image) -> Result<(), String> {
+    pub fn build(dockerfile: &str, image: &Image, client_id: ClientId) -> Result<(), String> {
         let instructions = parse_dockerfile(dockerfile)?;
         ImageBuilder::prepare_image_directory(&image)?;
         info!("Image {} built successfully", image.id);
@@ -42,9 +43,14 @@ impl ImageBuilder {
             }
         }
 
-        send_feedback(FeedbackCommand::ImageBuilt {
-            image: Image::new(image.id.clone()),
-        })?;
+        let response = ClientResponse::new(
+            client_id,
+            FeedbackCommand::ImageBuilt {
+                image: Image::new(image.id.clone()),
+            },
+        );
+
+        send_feedback(response)?;
 
         Ok(())
     }

@@ -1,5 +1,6 @@
 use crate::controllers::Controller;
 use crate::image_builder::builder::ImageBuilder;
+use container_runtime::common::client_request::ClientRequest;
 use container_runtime::common::image::Image;
 use container_runtime::common::runtime_commands::ContainerCommand;
 use container_runtime::common::sockets::ConnectionStatus;
@@ -14,14 +15,19 @@ impl BuildImageController {
         BuildImageController {}
     }
 }
-impl Controller<ContainerCommand> for BuildImageController {
-    fn handle_connection(&mut self, command: ContainerCommand) -> Result<ConnectionStatus, String> {
+impl Controller<ClientRequest> for BuildImageController {
+    fn handle_connection(&mut self, request: ClientRequest) -> Result<ConnectionStatus, String> {
+        let command = request.command;
         match command {
             ContainerCommand::Build {
                 dockerfile,
                 image_id,
             } => {
-                ImageBuilder::build(dockerfile.as_str(), &Image::new(image_id.clone()))?;
+                ImageBuilder::build(
+                    dockerfile.as_str(),
+                    &Image::new(image_id.clone()),
+                    request.client_id,
+                )?;
                 info!("Image {} built successfully", image_id);
             }
             _ => {

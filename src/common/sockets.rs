@@ -5,16 +5,16 @@ use self::{
     unix_socket::{UnixSocketListener, UnixSocketStream},
 };
 
-use super::feedback_commands::FeedbackCommand;
+use super::client_request::{ClientId, ClientResponse};
 
 pub mod container_commands_socket;
 pub mod feedback_commands_socket;
 pub mod generic_sockets_with_parsers;
 pub mod unix_socket;
 
-pub static DAEMON_SOCKET: &'static str = "/tmp/rust.sock";
+pub static SOCKETS_PATH: &'static str = "/tmp/container-runtime/";
 
-pub static CLIENT_SOCKET: &'static str = "/tmp/rust_client.sock";
+pub static DAEMON_SOCKET: &'static str = "/tmp/container-runtime/rust.sock";
 
 pub enum ConnectionStatus {
     Running,
@@ -36,6 +36,7 @@ pub trait SocketListener {
 }
 
 pub fn get_container_command_listener() -> ContainerCommandListener {
+    cleanup_sockets();
     Box::from(GenericCommandListener::new(Box::from(
         UnixSocketListener::new(DAEMON_SOCKET),
     )))
@@ -47,20 +48,25 @@ pub fn get_container_command_stream() -> ContainerCommandStream {
     ))))
 }
 
-pub fn get_client_socket_listener() -> FeedbackCommandListener {
+pub fn get_client_socket_listener(client_id: ClientId) -> FeedbackCommandListener {
     Box::from(GenericCommandListener::new(Box::from(
-        UnixSocketListener::new(CLIENT_SOCKET),
+        UnixSocketListener::new(client_id.get_id()),
     )))
 }
-pub fn get_client_socket_stream() -> FeedbackCommandStream {
+pub fn get_client_socket_stream(client: ClientId) -> FeedbackCommandStream {
     Box::from(GenericCommandStream::new(Box::from(UnixSocketStream::new(
-        CLIENT_SOCKET,
+        client.get_id(),
     ))))
 }
 
-pub fn send_feedback(feedback_command: FeedbackCommand) -> Result<(), String> {
-    let mut socket = get_client_socket_stream();
+pub fn cleanup_sockets() {
+    std::fs::remove_dir_all(SOCKETS_PATH).unwrap_or_default();
+    std::fs::create_dir_all(SOCKETS_PATH).unwrap_or_default();
+}
+
+pub fn send_feedback(client_response: ClientResponse) -> Result<(), String> {
+    let mut socket = get_client_socket_stream(client_response.client_id);
     socket.connect()?;
-    socket.send_command(feedback_command)?;
+    socket.send_command(client_response.command)?;
     Ok(())
 }

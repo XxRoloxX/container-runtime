@@ -2,7 +2,7 @@ use super::image::Image;
 use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display, Formatter};
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub enum FeedbackCommand {
     ImageBuilt { image: Image },
     ContainerStarted { pid: i32, name: String },

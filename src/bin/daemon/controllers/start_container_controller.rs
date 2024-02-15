@@ -1,5 +1,6 @@
 use crate::controllers::Controller;
 use crate::{container::Container, runner::Runner};
+use container_runtime::common::client_request::ClientRequest;
 use container_runtime::common::image::Image;
 use container_runtime::common::runtime_commands::ContainerCommand;
 use container_runtime::common::sockets::ConnectionStatus;
@@ -13,26 +14,24 @@ impl StartContainerController<'_> {
         StartContainerController { runner }
     }
 }
-impl Controller<ContainerCommand> for StartContainerController<'_> {
-    fn handle_connection(&mut self, command: ContainerCommand) -> Result<ConnectionStatus, String> {
-        match command {
+impl Controller<ClientRequest> for StartContainerController<'_> {
+    fn handle_connection(&mut self, request: ClientRequest) -> Result<ConnectionStatus, String> {
+        match request.command {
             ContainerCommand::Start {
                 container_id,
                 image,
                 command,
                 args,
             } => unsafe {
-                self.runner.start_container(Container::new(
-                    container_id.clone(),
-                    Image::new(image),
-                    command,
-                    args,
-                ))?;
+                self.runner.start_container(
+                    Container::new(container_id.clone(), Image::new(image), command, args),
+                    request.client_id,
+                )?;
             },
             _ => {
                 return Err(format!(
                     "Command not supported by this controller {}",
-                    command
+                    request.command
                 ));
             }
         }
