@@ -4,9 +4,10 @@ use nix::unistd::{execvp, Pid};
 use std::ffi::CString;
 
 pub fn get_install_path() -> Result<String, String> {
-    match std::env::var("INSTALL_PATH") {
-        Ok(path) => Ok(path),
-        Err(_) => Err("INSTALL_PATH not set".to_string()),
+    let install_path = env!("INSTALL_PATH").to_string();
+    match install_path.as_str() {
+        "" => Err("INSTALL_PATH is not set".to_string()),
+        path => Ok(path.to_string()),
     }
 }
 

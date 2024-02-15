@@ -1,4 +1,7 @@
-use std::fmt::{self, Display, Formatter};
+use std::{
+    fmt::{self, Display, Formatter},
+    path::PathBuf,
+};
 
 use clap::Subcommand;
 use serde::{Deserialize, Serialize};
@@ -16,8 +19,8 @@ pub enum ContainerCommand {
     Build {
         /// The image id
         image_id: String,
-        /// The path to the Dockerfile
-        dockerfile: String,
+        /// The path to the Dockerfile (canonaize it first to get the absolute path)
+        dockerfile: PathBuf,
     },
     /// Stop a container
     Stop {
@@ -32,6 +35,17 @@ pub enum ContainerCommand {
         /// The image to use
         image: String,
     },
+}
+
+impl ContainerCommand {
+    pub fn canonize_paths(&mut self) {
+        match self {
+            ContainerCommand::Build { dockerfile, .. } => {
+                *dockerfile = dockerfile.canonicalize().unwrap();
+            }
+            _ => {}
+        }
+    }
 }
 
 impl Display for ContainerCommand {
@@ -50,7 +64,12 @@ impl Display for ContainerCommand {
             ContainerCommand::Build {
                 image_id,
                 dockerfile,
-            } => write!(f, "Build image {} with Dockerfile {}", image_id, dockerfile),
+            } => write!(
+                f,
+                "Build image {} with Dockerfile {}",
+                image_id,
+                dockerfile.to_str().unwrap()
+            ),
             ContainerCommand::Stop { container_id } => {
                 write!(f, "Stop container {}", container_id)
             }

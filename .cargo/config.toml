@@ -1,7 +1,7 @@
 [doc]
 browser = "firefox"
 
-[install]
-root = "/usr/local/bin"
+# [install]
+# root = "/usr/local/bin"
 
 

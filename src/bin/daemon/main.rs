@@ -1,4 +1,4 @@
-use container_runtime::common::sockets::get_container_command_listener;
+use container_runtime::common::{logs::configure_logging, sockets::get_container_command_listener};
 use log::{error, info};
 
 pub mod container;
@@ -9,8 +9,7 @@ pub mod runner;
 pub mod server;
 
 fn main() {
-    println!("Running server");
-    log4rs::init_file("log4rs.yaml", Default::default()).unwrap();
+    configure_logging().expect("Failed to get INSTALL_PATH");
     match server::run_server(get_container_command_listener()) {
         Ok(_) => {
             info!("Server was started");

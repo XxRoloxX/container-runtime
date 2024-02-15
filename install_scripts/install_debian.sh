@@ -8,5 +8,5 @@ echo "Set executable scripts"
 chmod +x install_scripts/install.sh
 
 echo "Installing the container-runtime"
-./install.sh
+./install_scripts/install.sh
 

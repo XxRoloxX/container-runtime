@@ -8,7 +8,7 @@ use container_runtime::common::{
 };
 use log::{error, info};
 use nix::unistd::{fork, ForkResult};
-use std::{process::Command, thread};
+use std::{path::PathBuf, process::Command, thread};
 
 use crate::image_builder::parser::DockerfileInstruction;
 
@@ -32,7 +32,7 @@ impl ImageBuilder {
                     ImageBuilder::run_command(&image, command)?;
                 },
                 DockerfileInstruction::COPY(source, destination) => {
-                    ImageBuilder::copy_file(&image, source, destination)?;
+                    ImageBuilder::copy_file(&image, dockerfile.to_string(), source, destination)?;
                 }
                 DockerfileInstruction::FROM(source_image_id) => {
                     ImageBuilder::copy_image(&image, source_image_id)?;
@@ -113,10 +113,22 @@ impl ImageBuilder {
         Ok(())
     }
 
-    fn copy_file(image: &Image, source: String, destination: String) -> Result<(), String> {
+    fn copy_file(
+        image: &Image,
+        dockerfile: String,
+        source: String,
+        destination: String,
+    ) -> Result<(), String> {
         let image_path = image.get_filesystem_path()?;
+
+        // Make the source path relative to the Dockerfile
+        let source_path = PathBuf::from(dockerfile)
+            .parent()
+            .ok_or("Failed to get parent directory")?
+            .join(source);
+
         let destination_path = format!("{}/{}", image_path, destination);
-        copy_directory(source.as_str(), destination_path.as_str())?;
+        copy_directory(source_path.to_str().unwrap(), destination_path.as_str())?;
         Ok(())
     }
 

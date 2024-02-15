@@ -24,7 +24,7 @@ impl Controller<ClientRequest> for BuildImageController {
                 image_id,
             } => {
                 ImageBuilder::build(
-                    dockerfile.as_str(),
+                    dockerfile.to_str().unwrap(),
                     &Image::new(image_id.clone()),
                     request.client_id,
                 )?;

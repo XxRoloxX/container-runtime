@@ -9,7 +9,6 @@ use container_runtime::common::{
     },
     strace::run_strace,
 };
-use dotenv::dotenv;
 use log::info;
 use nix::unistd::Pid;
 
@@ -20,14 +19,15 @@ struct Cli {
 }
 
 pub fn run_cli(mut stream: ContainerCommandStream) -> Result<(), String> {
-    dotenv().ok();
     let args = Cli::parse();
     stream.connect()?;
     info!("Connected to the deamon");
 
-    let command = args.command.ok_or("No command provided".to_string())?;
+    let mut command = args.command.ok_or("No command provided".to_string())?;
 
     info!("{}", command);
+
+    command.canonize_paths();
 
     let client_request = ClientRequest::new(command);
 
