@@ -10,8 +10,8 @@ start_container:
 	cargo build && sudo RUST_LOG=info ./target/debug/client start  new_container new_image4 /bin/bash 
 
 install_arch:
-	sudo ./install_arch.sh
+	sudo chmod +x ./install_scripts/install_arch.sh && sudo ./install_scripts/install_arch.sh
 install_debian:
-	sudo ./install_debian.sh
+	sudo chmod +x ./install_scripts/install_debian.sh && sudo ./install_scripts/install_debian.sh
 	
 
