@@ -1,10 +1,8 @@
 use container_runtime::common::sockets::get_container_command_stream;
-use dotenv::dotenv;
 use log::{error, info};
 
 pub mod cli;
 fn main() {
-    dotenv().ok();
     log4rs::init_file("log4rs.yaml", Default::default()).unwrap();
     match cli::run_cli(get_container_command_stream()) {
         Ok(_) => info!("Command sent successfully"),

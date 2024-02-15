@@ -1,3 +1,5 @@
 [doc]
 browser = "firefox"
 
+[env]
+INSTALL_PATH = { value = "/var/lib/container-runtime/",force = true }
