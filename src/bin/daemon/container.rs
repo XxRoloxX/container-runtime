@@ -52,6 +52,7 @@ impl Container {
         on_exit: Option<ContainerCallback>,
     ) -> Result<Pid, String> {
         self.create()?;
+        let entrypoints = self.image.get_entrypoints()?;
         self.mount_overlayfs()?;
         container_unshare()?;
 
@@ -66,6 +67,7 @@ impl Container {
             }
             Ok(ForkResult::Child) => {
                 self.setup_rootfs()?;
+                entrypoints.execute_entrypoints()?;
                 execute_command(&self.command, self.args.clone())?;
                 Ok(Pid::from_raw(0))
             }
@@ -121,7 +123,7 @@ impl Container {
         }
     }
     fn get_lower_overlayfs_path(&self) -> Result<String, String> {
-        self.image.get_image_path()
+        self.image.get_filesystem_path()
     }
 
     fn get_work_overlayfs_path(&self) -> Result<String, String> {

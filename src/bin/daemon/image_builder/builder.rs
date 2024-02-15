@@ -35,8 +35,19 @@ impl ImageBuilder {
                 DockerfileInstruction::FROM(source_image_id) => {
                     ImageBuilder::copy_image(&image, source_image_id)?;
                 }
+                DockerfileInstruction::ENTRYPOINT(entrypoint) => {
+                    ImageBuilder::add_entrypoint(&image, entrypoint)?;
+                }
             }
         }
+
+        Ok(())
+    }
+
+    fn add_entrypoint(image: &Image, entrypoint: String) -> Result<(), String> {
+        let mut entrypoints = image.get_entrypoints()?;
+        entrypoints.add_entrypoint(entrypoint);
+        image.set_entrypoints(entrypoints)?;
 
         Ok(())
     }
@@ -69,7 +80,7 @@ impl ImageBuilder {
 
     // Run this function only if it is separated from the main process (via fork or unshare)
     fn execute_command_in_isolation(image: &Image, command: String) -> Result<(), String> {
-        let image_path = image.get_image_path()?;
+        let image_path = image.get_filesystem_path()?;
 
         change_current_dir(image_path.as_str())
             .map_err(|e| format!("Failed to change dir: {}", e))?;
@@ -92,7 +103,7 @@ impl ImageBuilder {
     }
 
     fn copy_file(image: &Image, source: String, destination: String) -> Result<(), String> {
-        let image_path = image.get_image_path()?;
+        let image_path = image.get_filesystem_path()?;
         let destination_path = format!("{}/{}", image_path, destination);
         copy_directory(source.as_str(), destination_path.as_str())?;
         Ok(())

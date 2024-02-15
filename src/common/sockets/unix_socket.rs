@@ -48,7 +48,7 @@ impl SocketListener for UnixSocketListener {
         for stream in listener.incoming() {
             let mut connection = stream.map_err(|e| format!("Connection faield {}", e))?;
             info!("Got connection");
-            let mut buf: [u8; 100] = [0u8; 100];
+            let mut buf: [u8; 200] = [0u8; 200];
 
             let read_bytes = connection
                 .read(&mut buf)

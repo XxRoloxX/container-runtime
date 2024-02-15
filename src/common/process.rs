@@ -27,10 +27,7 @@ pub fn execute_command(cmd: &str, args: Vec<String>) -> Result<(), String> {
 
 pub fn container_unshare() -> Result<(), String> {
     unshare(
-        CloneFlags::CLONE_NEWPID
-            | CloneFlags::CLONE_NEWNS
-            | CloneFlags::CLONE_NEWUTS
-            | CloneFlags::CLONE_NEWNET,
+        CloneFlags::CLONE_NEWPID | CloneFlags::CLONE_NEWNS | CloneFlags::CLONE_NEWUTS, // | CloneFlags::CLONE_NEWNET,
     )
     .map_err(|e| format!("Failed to unshare: {}", e))?;
     Ok(())

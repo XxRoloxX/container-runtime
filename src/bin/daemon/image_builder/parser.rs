@@ -4,6 +4,7 @@ pub enum DockerfileInstruction {
     FROM(String),
     RUN(String),
     COPY(String, String),
+    ENTRYPOINT(String),
 }
 
 pub fn parse_dockerfile(dockerfile_path: &str) -> Result<Vec<DockerfileInstruction>, String> {
@@ -25,6 +26,9 @@ pub fn map_dockerfile_instruction(
     match instruction {
         "FROM" => Ok(DockerfileInstruction::FROM(values.collect())),
         "RUN" => Ok(DockerfileInstruction::RUN(
+            values.collect::<Vec<&str>>().join(" "),
+        )),
+        "ENTRYPOINT" => Ok(DockerfileInstruction::ENTRYPOINT(
             values.collect::<Vec<&str>>().join(" "),
         )),
         "COPY" => {
