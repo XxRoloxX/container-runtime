@@ -5,6 +5,8 @@ use self::{
     unix_socket::{UnixSocketListener, UnixSocketStream},
 };
 
+use super::feedback_commands::FeedbackCommand;
+
 pub mod container_commands_socket;
 pub mod feedback_commands_socket;
 pub mod generic_sockets_with_parsers;
@@ -14,7 +16,12 @@ pub static DAEMON_SOCKET: &'static str = "/tmp/rust.sock";
 
 pub static CLIENT_SOCKET: &'static str = "/tmp/rust_client.sock";
 
-pub type ConnectionHandler = Box<dyn FnMut(Vec<u8>) -> Result<(), String> + 'static>;
+pub enum ConnectionStatus {
+    Running,
+    Finished,
+}
+
+pub type ConnectionHandler = Box<dyn FnMut(Vec<u8>) -> Result<ConnectionStatus, String> + 'static>;
 pub type ConnectionCommand = Vec<u8>;
 
 pub trait SocketStream: Send {
@@ -49,4 +56,11 @@ pub fn get_client_socket_stream() -> FeedbackCommandStream {
     Box::from(GenericCommandStream::new(Box::from(UnixSocketStream::new(
         CLIENT_SOCKET,
     ))))
+}
+
+pub fn send_feedback(feedback_command: FeedbackCommand) -> Result<(), String> {
+    let mut socket = get_client_socket_stream();
+    socket.connect()?;
+    socket.send_command(feedback_command)?;
+    Ok(())
 }

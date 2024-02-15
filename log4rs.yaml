@@ -5,6 +5,8 @@ appenders:
   # An appender named "stdout" that writes to stdout
   stdout:
     kind: console
+    encoder:
+      pattern: "{d} [{t}] {h({l})} {M}:{m}{n}"
 
   # An appender named "requests" that writes to a file with a custom pattern encoder
   requests:
@@ -15,19 +17,7 @@ appenders:
 
 # Set the default logging level to "warn" and attach the "stdout" appender to the root
 root:
-  level: warn
+  level: info
   appenders:
     - stdout
-
-loggers:
-  # Raise the maximum log level for events sent to the "app::backend::db" logger to "info"
-  app::backend::db:
-    level: info
-
-  # Route log events sent to the "app::requests" logger to the "requests" appender,
-  # and *not* the normal appenders installed at the root
-  app::requests:
-    level: info
-    appenders:
-      - requests
-    additive: false
+    - requests

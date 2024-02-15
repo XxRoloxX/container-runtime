@@ -1,3 +1,4 @@
+pub mod client_request;
 pub mod feedback_commands;
 pub mod filesystem;
 pub mod image;

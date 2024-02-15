@@ -2,6 +2,7 @@ use crate::controllers::Controller;
 use crate::image_builder::builder::ImageBuilder;
 use container_runtime::common::image::Image;
 use container_runtime::common::runtime_commands::ContainerCommand;
+use container_runtime::common::sockets::ConnectionStatus;
 use log::info;
 
 pub struct BuildImageController {
@@ -14,7 +15,7 @@ impl BuildImageController {
     }
 }
 impl Controller<ContainerCommand> for BuildImageController {
-    fn handle_connection(&mut self, command: ContainerCommand) -> Result<(), String> {
+    fn handle_connection(&mut self, command: ContainerCommand) -> Result<ConnectionStatus, String> {
         match command {
             ContainerCommand::Build {
                 dockerfile,
@@ -31,6 +32,6 @@ impl Controller<ContainerCommand> for BuildImageController {
             }
         }
 
-        Ok(())
+        Ok(ConnectionStatus::Running)
     }
 }

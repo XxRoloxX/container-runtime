@@ -1,6 +1,6 @@
 use container_runtime::common::{
     feedback_commands::FeedbackCommand,
-    sockets::get_client_socket_stream,
+    sockets::send_feedback,
     thread_pool::{Job, ThreadPool},
 };
 use log::info;
@@ -36,18 +36,14 @@ impl Runner {
         let (start_container_id, exit_container_id) = (container.id.clone(), container.id.clone());
 
         let on_start_cb: ContainerCallback = Box::from(move |pid: Pid| {
-            let mut socket = get_client_socket_stream();
-            socket.connect()?;
-            socket.send_command(FeedbackCommand::ContainerStarted {
+            send_feedback(FeedbackCommand::ContainerStarted {
                 pid: pid.as_raw() as i32,
                 name: start_container_id,
             })
         });
 
         let on_exit_cb: ContainerCallback = Box::from(move |pid: Pid| {
-            let mut socket = get_client_socket_stream();
-            socket.connect()?;
-            socket.send_command(FeedbackCommand::ContainerExited {
+            send_feedback(FeedbackCommand::ContainerExited {
                 pid: pid.as_raw() as i32,
                 name: exit_container_id,
             })

@@ -1,12 +1,13 @@
-use std::{process::Command, thread};
-
 use container_runtime::common::{
+    feedback_commands::FeedbackCommand,
     filesystem::{change_current_dir, clear_directory, copy_directory},
     image::Image,
     process::wait_for_child_process,
+    sockets::send_feedback,
 };
 use log::{error, info};
 use nix::unistd::{fork, ForkResult};
+use std::{process::Command, thread};
 
 use crate::image_builder::parser::DockerfileInstruction;
 
@@ -40,6 +41,10 @@ impl ImageBuilder {
                 }
             }
         }
+
+        send_feedback(FeedbackCommand::ImageBuilt {
+            image: Image::new(image.id.clone()),
+        })?;
 
         Ok(())
     }

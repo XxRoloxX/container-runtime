@@ -12,11 +12,15 @@ pub fn parse_dockerfile(dockerfile_path: &str) -> Result<Vec<DockerfileInstructi
         .map_err(|e| format!("Couldn't read Dockerfile {}: {}", dockerfile_path, e))?;
 
     let mut instructions = Vec::new();
-    for line in dockerfile.lines() {
+    for line in dockerfile.lines().filter(|l| !is_line_comment(l)) {
         let mut parts = line.split_whitespace();
         instructions.push(map_dockerfile_instruction(parts.next().unwrap(), parts)?);
     }
     Ok(instructions)
+}
+
+pub fn is_line_comment(line: &str) -> bool {
+    line.starts_with("#")
 }
 
 pub fn map_dockerfile_instruction(

@@ -3,6 +3,7 @@ use std::{
     process::{Command, Stdio},
 };
 
+use log::info;
 use nix::unistd::Pid;
 use regex::Regex;
 
@@ -10,12 +11,15 @@ pub fn run_strace(pid: Pid) {
     let pid_stringified = format!("{}", pid);
     let p_stdout = format!("/proc/{}/fd/1", pid);
     let args = vec![
+        "-ff", // follow forks
         "-p",
         pid_stringified.as_str(),
         "-e",
         "write",
         "-P",
         p_stdout.as_str(),
+        "-s",
+        "1000",
     ];
 
     let mut thread = Command::new("strace")
@@ -34,10 +38,10 @@ pub fn run_strace(pid: Pid) {
 }
 
 pub fn parse_strace_output(output: &str) {
-    let re = Regex::new(r#"write\(\d+, "(?<stdout>.*?)", \d+\)"#).unwrap();
+    let re = Regex::new(r#"write\(\d+, "(?<stdout>.*)".*, \d+\)"#).unwrap();
     if let Some(matches) = re.captures(output) {
         let stdout = matches["stdout"].to_string();
         let sanitized_stdout = stdout.replace("\\n", "\n");
-        print!("{}", sanitized_stdout);
+        info!("{}", sanitized_stdout);
     }
 }

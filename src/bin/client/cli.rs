@@ -4,7 +4,7 @@ use container_runtime::common::{
     runtime_commands::ContainerCommand,
     sockets::{
         container_commands_socket::ContainerCommandStream,
-        generic_sockets_with_parsers::CommandHandler, get_client_socket_listener,
+        generic_sockets_with_parsers::CommandHandler, get_client_socket_listener, ConnectionStatus,
     },
     strace::run_strace,
 };
@@ -43,17 +43,24 @@ pub fn listen_for_daemon_response() -> Result<(), String> {
 
     let handle_connection: CommandHandler<FeedbackCommand> =
         Box::from(|command: FeedbackCommand| {
-            info!("Received message: {}", command);
+            info!("{}", command);
             match command {
-                FeedbackCommand::ContainerStarted { pid, .. } => run_strace(Pid::from_raw(pid)),
+                FeedbackCommand::ContainerStarted { pid, .. } => {
+                    info!("Container started with pid {}", pid);
+                    run_strace(Pid::from_raw(pid));
+                    Ok(ConnectionStatus::Running)
+                }
                 FeedbackCommand::ContainerExited { name, .. } => {
-                    return Err(format!("Container {} exited", name).to_string());
+                    // return Err(format!("Container {} exited", name).to_string());
+                    info!("Container {} exited", name);
+                    Ok(ConnectionStatus::Finished)
                 }
-                _ => {
-                    return Err("Unknown command".to_string());
+                FeedbackCommand::ImageBuilt { image } => {
+                    // return Err(format!("Image {} built", image.id).to_string());
+                    info!("Image {} built", image.id);
+                    Ok(ConnectionStatus::Finished)
                 }
-            };
-            Ok(())
+            }
         });
 
     socket_listener.listen(handle_connection)?;

@@ -12,7 +12,7 @@ pub mod server;
 fn main() {
     println!("Running server");
     dotenv().ok();
-    env_logger::init();
+    log4rs::init_file("log4rs.yaml", Default::default()).unwrap();
     match server::run_server(get_container_command_listener()) {
         Ok(_) => {
             info!("Server was started");

@@ -1,11 +1,10 @@
-use super::{ConnectionHandler, SocketListener, SocketStream};
-use log::error;
+use super::{ConnectionHandler, ConnectionStatus, SocketListener, SocketStream};
 use serde::{de::DeserializeOwned, Serialize};
 
 pub struct GenericCommandStream(Box<dyn SocketStream>);
 pub struct GenericCommandListener(Box<dyn SocketListener>);
 
-pub type CommandHandler<T> = Box<dyn FnMut(T) -> Result<(), String> + 'static>;
+pub type CommandHandler<T> = Box<dyn FnMut(T) -> Result<ConnectionStatus, String> + 'static>;
 
 pub trait SocketListenerWithParser<T>
 where
@@ -28,7 +27,11 @@ impl GenericCommandStream {
     }
 }
 
-// unsafe impl Sync for GenericCommandStream {}
+impl GenericCommandListener {
+    pub fn new(socket: Box<dyn SocketListener>) -> GenericCommandListener {
+        GenericCommandListener(socket)
+    }
+}
 
 impl<T: Serialize> SocketStreamWithParser<T> for GenericCommandStream {
     fn connect(&mut self) -> Result<i32, String> {
@@ -47,12 +50,6 @@ impl<T: Serialize> SocketStreamWithParser<T> for GenericCommandStream {
     }
 }
 
-impl GenericCommandListener {
-    pub fn new(socket: Box<dyn SocketListener>) -> GenericCommandListener {
-        GenericCommandListener(socket)
-    }
-}
-
 impl<T: DeserializeOwned + 'static> SocketListenerWithParser<T> for GenericCommandListener {
     fn prepare_socket(&mut self) -> Result<(), String> {
         self.0.prepare_socket()
@@ -60,10 +57,10 @@ impl<T: DeserializeOwned + 'static> SocketListenerWithParser<T> for GenericComma
 
     fn listen(&mut self, mut handle_connection: CommandHandler<T>) -> Result<(), String> {
         let mut handler: ConnectionHandler =
-            Box::from(move |data: Vec<u8>| -> Result<(), String> {
+            Box::from(move |data: Vec<u8>| -> Result<ConnectionStatus, String> {
                 let command = parse_command(data)?;
-                handle_connection(command)?;
-                Ok(())
+                let status = handle_connection(command)?;
+                Ok(status)
             });
 
         self.0.listen(&mut handler)?;

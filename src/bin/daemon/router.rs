@@ -1,4 +1,4 @@
-use container_runtime::common::runtime_commands::ContainerCommand;
+use container_runtime::common::{runtime_commands::ContainerCommand, sockets::ConnectionStatus};
 
 use crate::{
     controllers::{
@@ -8,7 +8,10 @@ use crate::{
     runner::Runner,
 };
 
-pub fn route_message(runner: &mut Runner, command: ContainerCommand) -> Result<(), String> {
+pub fn route_message(
+    runner: &mut Runner,
+    command: ContainerCommand,
+) -> Result<ConnectionStatus, String> {
     let mut controller: Box<dyn Controller<ContainerCommand>> = match command {
         ContainerCommand::Build { .. } => Box::from(BuildImageController::new()),
         ContainerCommand::Start { .. } => Box::from(StartContainerController::new(runner)),
@@ -17,6 +20,6 @@ pub fn route_message(runner: &mut Runner, command: ContainerCommand) -> Result<(
         }
     };
 
-    controller.handle_connection(command)?;
-    Ok(())
+    let status = controller.handle_connection(command)?;
+    Ok(status)
 }

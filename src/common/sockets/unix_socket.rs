@@ -56,7 +56,11 @@ impl SocketListener for UnixSocketListener {
 
             let trimmed_buffer = buf[0..read_bytes].to_vec();
 
-            handle_connection(trimmed_buffer)?;
+            let status = handle_connection(trimmed_buffer)?;
+
+            if let super::ConnectionStatus::Finished = status {
+                break;
+            }
         }
 
         Ok(())
