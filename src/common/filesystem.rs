@@ -142,7 +142,7 @@ pub fn clear_directory(path: &str) -> Result<(), String> {
 }
 
 pub fn mount_overlayfs(lower: &str, upper: &str, work: &str, target: &str) {
-    let flags = MsFlags::MS_NOSUID | MsFlags::MS_NODEV | MsFlags::MS_NOATIME;
+    let flags = MsFlags::MS_NOSUID | MsFlags::MS_NOATIME;
     mount(
         Some("overlay"),
         target,
