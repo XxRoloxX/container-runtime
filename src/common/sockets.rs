@@ -12,7 +12,7 @@ pub mod feedback_commands_socket;
 pub mod generic_sockets_with_parsers;
 pub mod unix_socket;
 
-pub static SOCKETS_PATH: &'static str = "/tmp/container-runtime/";
+pub static SOCKETS_PATH: &'static str = "/tmp/container-runtime";
 
 pub static DAEMON_SOCKET: &'static str = "/tmp/container-runtime/rust.sock";
 

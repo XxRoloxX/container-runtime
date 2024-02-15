@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use super::{feedback_commands::FeedbackCommand, runtime_commands::ContainerCommand};
+use super::{
+    feedback_commands::FeedbackCommand, runtime_commands::ContainerCommand, sockets::SOCKETS_PATH,
+};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ClientId(pub String);
@@ -8,7 +10,7 @@ pub struct ClientId(pub String);
 impl ClientId {
     pub fn new() -> ClientId {
         let client_id = rand::random::<u64>().to_string();
-        let socket_path = format!("/tmp/container-runtime/{}", client_id);
+        let socket_path = format!("{}/{}", SOCKETS_PATH, client_id);
         ClientId(socket_path)
     }
     pub fn get_id(&self) -> &String {
