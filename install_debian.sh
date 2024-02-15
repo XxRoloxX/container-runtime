@@ -5,7 +5,7 @@ apt-get update
 apt-get install -y strace debootstrap
 
 echo "Loading environment variables"
-source ./env.sh
+source ./.env
 
 CONTAINTERS_PATH=$INSTALL_PATH/containers
 IMAGES_PATH=$INSTALL_PATH/images
