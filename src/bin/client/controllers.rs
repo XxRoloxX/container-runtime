@@ -54,7 +54,7 @@ impl ResponseController for ContentSentController {
     fn handle_response(&self, command: FeedbackCommand) -> Result<ConnectionStatus, String> {
         match command {
             FeedbackCommand::Content(data) => {
-                info!("Recieved data: {}", data);
+                info!("{}", data);
                 Ok(ConnectionStatus::Finished)
             }
             _ => {

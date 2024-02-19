@@ -1,5 +1,4 @@
 use super::{ConnectionHandler, ConnectionStatus, SocketListener, SocketStream};
-use log::error;
 use serde::{de::DeserializeOwned, Serialize};
 
 pub struct GenericCommandStream(Box<dyn SocketStream>);

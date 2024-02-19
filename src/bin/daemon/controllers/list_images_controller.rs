@@ -22,7 +22,7 @@ impl Controller<ClientRequest> for ListImagesController {
                 let images = images_manager::list_images()?;
                 let response = ClientResponse {
                     client_id: request.client_id,
-                    command: FeedbackCommand::Content(images.join(", ")),
+                    command: FeedbackCommand::Content(format!("\nIMAGES\n{}", images.join("\n"))),
                 };
                 send_feedback(response)?;
             }

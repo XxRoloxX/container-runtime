@@ -7,7 +7,9 @@ use container_runtime::common::{
 use crate::{
     controllers::{
         build_image_controller::BuildImageController, list_images_controller::ListImagesController,
-        start_container_controller::StartContainerController, Controller,
+        list_running_containers_controller::ListRunningContainersController,
+        start_container_controller::StartContainerController,
+        stop_container_controller::StopContainerController, Controller,
     },
     runner::Runner,
 };
@@ -31,6 +33,8 @@ pub fn match_command_to_controller<'a>(
     match command {
         ContainerCommand::Build { .. } => Box::from(BuildImageController::new()),
         ContainerCommand::Start { .. } => Box::from(StartContainerController::new(runner)),
+        ContainerCommand::Stop { .. } => Box::from(StopContainerController::new(runner)),
         ContainerCommand::Image(ImageCommand::List) => Box::from(ListImagesController::new()),
+        ContainerCommand::List {} => Box::from(ListRunningContainersController::new(runner)),
     }
 }

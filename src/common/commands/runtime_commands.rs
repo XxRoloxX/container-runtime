@@ -54,12 +54,19 @@ pub enum ContainerCommand {
         /// The arguments to pass to the command
         args: Vec<String>,
     },
+    Stop {
+        /// The container id
+        container_id: String,
+    },
     Build {
         /// The image id
         image_id: String,
         /// The path to the Dockerfile (canonaize it first to get the absolute path)
         dockerfile: PathBuf,
     },
+
+    // List all running containers
+    List {},
 }
 
 impl ContainerCommand {
@@ -103,6 +110,8 @@ impl Display for ContainerCommand {
             ContainerCommand::Image(image_command) => {
                 write!(f, "Image command {:?}", image_command)
             }
+            ContainerCommand::Stop { container_id } => write!(f, "Stop container {}", container_id),
+            ContainerCommand::List {} => write!(f, "List running containers"),
         }
     }
 }

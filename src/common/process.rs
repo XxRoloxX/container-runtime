@@ -1,4 +1,5 @@
 use nix::sched::{unshare, CloneFlags};
+use nix::sys::signal::{signal, SigHandler, Signal};
 use nix::sys::wait::waitpid;
 use nix::unistd::{execvp, Pid};
 use std::ffi::CString;
@@ -43,6 +44,28 @@ pub fn map_network_configuration_to_unshare_flag(network: &NetworkConfiguration)
         NetworkConfiguration::None => CloneFlags::CLONE_NEWNET,
         NetworkConfiguration::Host => CloneFlags::empty(),
     }
+}
+
+pub fn ignore_process_termination() -> Result<(), String> {
+    unsafe {
+        signal(Signal::SIGINT, SigHandler::SigIgn)
+            .map_err(|e| format!("Failed to ignore SIGTERM: {}", e))?;
+    }
+    Ok(())
+}
+
+pub fn clear_process_signal_handlers() -> Result<(), String> {
+    unsafe {
+        signal(Signal::SIGINT, SigHandler::SigDfl)
+            .map_err(|e| format!("Failed to clear SIGTERM handler: {}", e))?;
+    }
+    Ok(())
+}
+
+pub fn kill_process(pid: Pid) -> Result<(), String> {
+    nix::sys::signal::kill(pid, nix::sys::signal::Signal::SIGTERM)
+        .map_err(|e| format!("Failed to kill process {}: {}", pid, e))?;
+    Ok(())
 }
 
 pub fn redirect_standard_output(output_file_descriptor: i32) -> Result<(), String> {
