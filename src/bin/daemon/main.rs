@@ -7,6 +7,7 @@ pub mod image_builder;
 pub mod router;
 pub mod runner;
 pub mod server;
+pub mod services;
 
 fn main() {
     configure_logging().expect("Failed to get INSTALL_PATH");

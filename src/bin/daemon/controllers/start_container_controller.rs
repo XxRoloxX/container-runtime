@@ -1,8 +1,8 @@
 use crate::controllers::Controller;
 use crate::{container::Container, runner::Runner};
 use container_runtime::common::client_request::ClientRequest;
+use container_runtime::common::commands::runtime_commands::ContainerCommand;
 use container_runtime::common::image::Image;
-use container_runtime::common::runtime_commands::ContainerCommand;
 use container_runtime::common::sockets::ConnectionStatus;
 
 pub struct StartContainerController<'a> {
@@ -20,11 +20,18 @@ impl Controller<ClientRequest> for StartContainerController<'_> {
             ContainerCommand::Start {
                 container_id,
                 image,
+                network,
                 command,
                 args,
             } => unsafe {
                 self.runner.start_container(
-                    Container::new(container_id.clone(), Image::new(image), command, args),
+                    Container::new(
+                        container_id.clone(),
+                        Image::new(image),
+                        network.unwrap_or(Default::default()),
+                        command,
+                        args,
+                    ),
                     request.client_id,
                 )?;
             },

@@ -6,14 +6,9 @@ appenders:
   stdout:
     kind: console
     encoder:
-      pattern: "{d} [{t}] {h({l})} {M}:{m}{n}"
+      pattern: "{h({l})} {M}:{m}{n}"
 
   # An appender named "requests" that writes to a file with a custom pattern encoder
-  requests:
-    kind: file
-    path: "log/requests.log"
-    encoder:
-      pattern: "{d} - {m}{n}"
   strace:
     kind: console
     encoder:
@@ -28,17 +23,8 @@ loggers:
       - strace
     additive: false
 
-  # Route log events sent to the "app::requests" logger to the "requests" appender,
-  # and *not* the normal appenders installed at the root
-  app::requests:
-    level: info
-    appenders:
-      - requests
-    additive: false
-
 # Set the default logging level to "warn" and attach the "stdout" appender to the root
 root:
   level: info
   appenders:
     - stdout
-    - requests

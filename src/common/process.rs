@@ -3,6 +3,8 @@ use nix::sys::wait::waitpid;
 use nix::unistd::{execvp, Pid};
 use std::ffi::CString;
 
+use super::commands::runtime_commands::NetworkConfiguration;
+
 pub fn get_install_path() -> Result<String, String> {
     let install_path = env!("INSTALL_PATH").to_string();
     match install_path.as_str() {
@@ -26,12 +28,21 @@ pub fn execute_command(cmd: &str, args: Vec<String>) -> Result<(), String> {
     Ok(())
 }
 
-pub fn container_unshare() -> Result<(), String> {
+pub fn container_unshare(network: &NetworkConfiguration) -> Result<(), String> {
     unshare(
-        CloneFlags::CLONE_NEWPID | CloneFlags::CLONE_NEWNS | CloneFlags::CLONE_NEWUTS, // | CloneFlags::CLONE_NEWNET,
+        CloneFlags::CLONE_NEWPID
+            | CloneFlags::CLONE_NEWNS
+            | CloneFlags::CLONE_NEWUTS
+            | map_network_configuration_to_unshare_flag(network),
     )
     .map_err(|e| format!("Failed to unshare: {}", e))?;
     Ok(())
+}
+pub fn map_network_configuration_to_unshare_flag(network: &NetworkConfiguration) -> CloneFlags {
+    match network {
+        NetworkConfiguration::None => CloneFlags::CLONE_NEWNET,
+        NetworkConfiguration::Host => CloneFlags::empty(),
+    }
 }
 
 pub fn redirect_standard_output(output_file_descriptor: i32) -> Result<(), String> {

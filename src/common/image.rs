@@ -57,10 +57,20 @@ impl Image {
         Image { id }
     }
 
-    pub fn get_image_path(&self) -> Result<String, String> {
+    pub fn get_images_path() -> Result<String, String> {
         let install_path = get_install_path()?;
+        let images_path = Path::new(&install_path).join("images");
 
-        let image_path = Path::new(&install_path).join("images").join(&self.id);
+        match images_path.to_str() {
+            None => Err(format!("Failed to access images path on {}", install_path)),
+            Some(path) => Ok(path.to_string()),
+        }
+    }
+
+    pub fn get_image_path(&self) -> Result<String, String> {
+        let install_path = Image::get_images_path()?;
+
+        let image_path = Path::new(&install_path).join(&self.id);
 
         match image_path.to_str() {
             None => Err(format!(

@@ -1,6 +1,6 @@
 use container_runtime::common::{
     client_request::{ClientId, ClientResponse},
-    feedback_commands::FeedbackCommand,
+    commands::feedback_commands::FeedbackCommand,
     filesystem::{change_current_dir, clear_directory, copy_directory},
     image::Image,
     process::wait_for_child_process,

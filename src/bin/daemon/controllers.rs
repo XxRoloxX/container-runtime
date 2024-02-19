@@ -1,6 +1,7 @@
 use container_runtime::common::sockets::ConnectionStatus;
 
 pub mod build_image_controller;
+pub mod list_images_controller;
 pub mod start_container_controller;
 
 pub trait Controller<T> {

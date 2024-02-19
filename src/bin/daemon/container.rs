@@ -4,10 +4,11 @@ use std::{
 };
 
 use container_runtime::common::{
+    commands::runtime_commands::NetworkConfiguration,
     filesystem::{clear_directory, mount_overlayfs, setup_rootfs},
     image::Image,
     process::{container_unshare, execute_command, get_install_path, wait_for_child_process},
-    sockets::container_commands_socket::ContainerCommandStream,
+    sockets::sockets_with_parsers::container_commands_socket::ContainerCommandStream,
 };
 use log::info;
 use nix::{
@@ -21,6 +22,7 @@ pub type ContainerCallback = Box<dyn FnOnce(Pid) -> Result<(), String> + Send + 
 pub struct Container {
     pub id: String,
     image: Box<Image>,
+    pub network: NetworkConfiguration,
     pub command: String,
     pub args: Vec<String>,
 }
@@ -32,18 +34,20 @@ pub struct ContainerLifetime {
 }
 
 impl Container {
-    pub fn new(id: String, image: Image, command: String, args: Vec<String>) -> Container {
+    pub fn new(
+        id: String,
+        image: Image,
+        network: NetworkConfiguration,
+        command: String,
+        args: Vec<String>,
+    ) -> Container {
         Container {
             id,
             image: Box::from(image),
+            network,
             command,
             args,
         }
-    }
-
-    pub fn create(&self) -> Result<(), String> {
-        self.prepare_container_directories()?;
-        Ok(())
     }
 
     pub unsafe fn start(
@@ -51,18 +55,20 @@ impl Container {
         on_start: Option<ContainerCallback>,
         on_exit: Option<ContainerCallback>,
     ) -> Result<Pid, String> {
-        self.create()?;
-        let entrypoints = self.image.get_entrypoints()?;
+        self.prepare_container_directories()?;
         self.mount_overlayfs()?;
-        container_unshare()?;
+        container_unshare(&self.network)?;
+
+        let entrypoints = self.image.get_entrypoints()?;
 
         match fork() {
             Ok(ForkResult::Parent { child, .. }) => {
                 on_start.map(|callback| callback(child));
                 wait_for_child_process(child);
+                on_exit.map(|callback| callback(child));
+
                 self.clean_up_on_exit()?;
                 info!("Container {} exited", self.id);
-                on_exit.map(|callback| callback(child));
                 Ok(child)
             }
             Ok(ForkResult::Child) => {

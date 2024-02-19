@@ -6,7 +6,9 @@ use std::os::fd::AsRawFd;
 use std::os::unix::net::UnixListener;
 use std::os::unix::net::UnixStream;
 
-use super::{ConnectionCommand, ConnectionHandler, SocketListener, SocketStream};
+use crate::common::sockets::{
+    ConnectionCommand, ConnectionHandler, ConnectionStatus, SocketListener, SocketStream,
+};
 
 pub struct UnixSocketListener {
     addr: String,
@@ -56,10 +58,12 @@ impl SocketListener for UnixSocketListener {
 
             let trimmed_buffer = buf[0..read_bytes].to_vec();
 
-            let status = handle_connection(trimmed_buffer)?;
-
-            if let super::ConnectionStatus::Finished = status {
-                break;
+            match handle_connection(trimmed_buffer) {
+                Ok(ConnectionStatus::Finished) => break,
+                Ok(ConnectionStatus::Running) => continue,
+                Err(e) => {
+                    info!("Couldn't handle connection : {}", e);
+                }
             }
         }
 

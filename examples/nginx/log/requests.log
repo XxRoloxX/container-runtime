@@ -1,0 +1,35 @@
+2024-02-18T23:00:43.168995826+01:00 - Connected to the deamon
+2024-02-18T23:00:43.169018329+01:00 - Build image nginx with Dockerfile ./Dockerfile
+2024-02-18T23:00:52.208021897+01:00 - Got connection
+2024-02-18T23:00:52.208050812+01:00 - Image nginx built
+2024-02-18T23:00:52.208070620+01:00 - Command sent successfully
+2024-02-18T23:02:09.949604182+01:00 - Connected to the deamon
+2024-02-18T23:02:09.949824683+01:00 - Start container nginx_container with network Host and image nginx and command /home/server.init and args []
+2024-02-18T23:03:25.334143506+01:00 - Connected to the deamon
+2024-02-18T23:03:25.334186037+01:00 - Start container nginx_container with network Host and image nginx and command /home/server.init and args []
+2024-02-18T23:03:25.335850257+01:00 - Got connection
+2024-02-18T23:03:25.335889051+01:00 - Container started with pid 22882
+2024-02-18T23:03:47.181779855+01:00 - Connected to the deamon
+2024-02-18T23:03:47.181822816+01:00 - Start container nginx_container with network Host and image nginx and command /home/server.init and args []
+2024-02-18T23:03:47.183126769+01:00 - Got connection
+2024-02-18T23:03:47.183169330+01:00 - Container started with pid 22915
+2024-02-18T23:03:58.651017746+01:00 - Connected to the deamon
+2024-02-18T23:03:58.651065907+01:00 - Start container nginx_container with network Host and image nginx and command /home/server.init and args []
+2024-02-18T23:03:58.653847034+01:00 - Got connection
+2024-02-18T23:03:58.653930232+01:00 - Container started with pid 22955
+2024-02-18T23:05:17.895684785+01:00 - Connected to the deamon
+2024-02-18T23:05:17.895781569+01:00 - Start container nginx_container with network Host and image nginx and command /home/server.init and args []
+2024-02-18T23:05:17.899217107+01:00 - Got connection
+2024-02-18T23:05:17.900252536+01:00 - Container started with pid 23086
+2024-02-18T23:07:17.241810253+01:00 - Connected to the deamon
+2024-02-18T23:07:17.241889925+01:00 - Start container nginx_container with network Host and image nginx and command none and args ["/home/server.init"]
+2024-02-18T23:07:17.244890049+01:00 - Got connection
+2024-02-18T23:07:17.244932930+01:00 - Container started with pid 23451
+2024-02-18T23:08:16.728880459+01:00 - Connected to the deamon
+2024-02-18T23:08:16.728917970+01:00 - Start container nginx_container with network None and image nginx and command /home/server.init and args []
+2024-02-18T23:08:16.731762426+01:00 - Got connection
+2024-02-18T23:08:16.731864219+01:00 - Container started with pid 23501
+2024-02-18T23:10:36.710101045+01:00 - Connected to the deamon
+2024-02-18T23:10:36.710175156+01:00 - Start container nginx_container with network None and image nginx and command /home/server.init and args []
+2024-02-18T23:10:36.712116252+01:00 - Got connection
+2024-02-18T23:10:36.712209840+01:00 - Container started with pid 23631

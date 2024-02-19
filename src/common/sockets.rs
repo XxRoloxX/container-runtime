@@ -1,16 +1,17 @@
 use self::{
-    container_commands_socket::{ContainerCommandListener, ContainerCommandStream},
-    feedback_commands_socket::{FeedbackCommandListener, FeedbackCommandStream},
     generic_sockets_with_parsers::{GenericCommandListener, GenericCommandStream},
-    unix_socket::{UnixSocketListener, UnixSocketStream},
+    raw_sockets::unix_socket::{UnixSocketListener, UnixSocketStream},
+    sockets_with_parsers::{
+        container_commands_socket::{ContainerCommandListener, ContainerCommandStream},
+        feedback_commands_socket::{FeedbackCommandListener, FeedbackCommandStream},
+    },
 };
 
 use super::client_request::{ClientId, ClientResponse};
 
-pub mod container_commands_socket;
-pub mod feedback_commands_socket;
 pub mod generic_sockets_with_parsers;
-pub mod unix_socket;
+pub mod raw_sockets;
+pub mod sockets_with_parsers;
 
 pub static SOCKETS_PATH: &'static str = "/tmp/container-runtime";
 
