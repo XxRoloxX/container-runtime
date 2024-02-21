@@ -136,8 +136,7 @@ it will be exetremly easy to add TCP/IP sockets and use them, insteam of UNIX so
 
 The **Container Runner** which is responsibe for orchestrating and
 managing containers is built with the multithreading in mind.
-It uses a thread pool which starts the container in the thread pool
-and monitors currently running conatiners.
+It uses a thread pool which makes it possible to orchestrate parralel execution of containers.
 
 ## Installation
 
