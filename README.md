@@ -22,11 +22,14 @@ This is a simple implementation of the linux container runtime from scratch in R
 
 ## What are Linux Containers?
 
-Linux containers, often referred to as LXC or Docker containers, are a lightweight and portable solution for packaging, distributing, and running applications. They provide a consistent environment for applications to run across different computing environments.
+Linux containers, often referred to as LXC or Docker containers,
+are a lightweight and portable solution for packaging, distributing,
+and running applications. They provide a consistent environment for
+applications to run across different computing environments.
 
 ### How are Linux Containers Implemented?
 
-The main feature that allows creating containers are namespaces - which at the kernel level allow to separate the process from the outside environment.
+The main feature that allows us to create containers are namespaces - which at the kernel level allow to separate the process from the outside environment.
 There are different kind of namespaces such as:
 
 - PID - maps the id's of the processes from the host enviroment to the container environment
@@ -58,7 +61,7 @@ At the moment of writing those are available instructions:
 
 - Lines preceeded with '#' will be treated as comments and ignored by parser.
 
-  Altoght the list of supported Dockefile-like commands is rather short, it is suprisingly effective.
+  Although the list of supported Dockefile-like commands is rather short, it is suprisingly effective.
 
 ##### How is `base` image build?
 
@@ -124,14 +127,14 @@ Communication between clients and the daemon is currently implemented via UNIX s
 
 For the Unix socket implementation, the main socket for daemon is created, on which it listens for incoming commands.
 When the clients connects to the daemon socket, it also opens a ephemeral client socket which is used
-to send response from daemon to each client separatly.
+to send response from daemon to each client separately.
 
 The sockets are implemented in such a manner that
 it will be exetremly easy to add TCP/IP sockets and use them, insteam of UNIX sockets.
 
 ### Multithreading
 
-The **Container Runner** is which is responsibe for orchestrating and
+The **Container Runner** which is responsibe for orchestrating and
 managing containers is built with the multithreading in mind.
 It uses a thread pool which starts the container in the thread pool
 and monitors currently running conatiners.
