@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use clap::Parser;
 use container_runtime::common::{
     client_request::{ClientId, ClientRequest},
@@ -42,7 +44,19 @@ pub fn listen_for_daemon_response(client_id: ClientId) -> Result<(), String> {
     socket_listener.prepare_socket()?;
 
     let handle_connection: CommandHandler<FeedbackCommand> = Box::from(route_feedback_command);
-
     socket_listener.listen(handle_connection)?;
     Ok(())
+}
+
+// Print loading animation on terminal
+
+pub fn show_loading_animation() {
+    let mut i = 0;
+    let frames = vec!["|", "/", "-", "\\"];
+    loop {
+        print!("\r{}", frames[i]);
+        std::io::stdout().flush().unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(100));
+        i = (i + 1) % 4;
+    }
 }

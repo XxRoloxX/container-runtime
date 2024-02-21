@@ -12,7 +12,7 @@ use container_runtime::common::{
 };
 use log::info;
 use nix::{
-    mount::umount,
+    mount::{umount, umount2},
     unistd::{fork, ForkResult, Pid},
 };
 
@@ -85,10 +85,11 @@ impl Container {
         let proc_mount = self.get_container_proc_mount()?;
         let overlay_mount = self.get_merged_overlayfs_path()?;
 
-        umount(proc_mount.as_str())
+        // Force umount of /proc and /overlay
+        umount2(proc_mount.as_str(), nix::mount::MntFlags::MNT_FORCE)
             .map_err(|e| format!("Failed to umount /proc on {}: {}", proc_mount, e))?;
 
-        umount(overlay_mount.as_str())
+        umount2(overlay_mount.as_str(), nix::mount::MntFlags::MNT_FORCE)
             .map_err(|e| format!("Failed to umount overlay on {}: {}", overlay_mount, e))?;
 
         println!("Cleaned on exit!");
