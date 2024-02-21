@@ -14,8 +14,6 @@ A lightweight container runtime implemented in Rust.
 - [Dependencies](#dependencies)
 - [Usage](#usage)
 - [Debugging](#debugging)
-- [Demo](#demo)
-- [Contributing](#contributing)
 - [License](#license)
 
 ## Introduction
@@ -119,7 +117,7 @@ The project is comprised of two binaries: **client** and **daemon**.
 The daemon is installed as a systemd service
 which runs on the background and can communicate with multiple clients at the same time.
 
-### Interprocess communication
+### Inter-Process Communication
 
 Communication between clients and the daemon is currently implemented via UNIX sockets.
 
@@ -152,6 +150,7 @@ and monitors currently running conatiners.
   - container-runtimed (daemon) to /usr/local/bin/container-runtimed -> /opt/container-runtime/daemon
 
 - Download system dependcies such as **debootstrap** and **strace** with the system's package manager.
+- Create systemd service unit file and move it to system directory
 
 ### How to install
 
@@ -185,6 +184,7 @@ container-runtime image list
 
 Container-runtime requires only two dependecies which should be installed during installation:
 
+- **cargo** - to compile the source code [Cargo Install](https://doc.rust-lang.org/book/ch01-01-installation.html)
 - **strace** - to capture the write syscalls of running containers and parse them the get the stdout of each container.
 - **debootstrap** - to download base debian filesystem
 
@@ -230,7 +230,7 @@ container-runtime image list
 
 ![container-runtime list](docs/container-runtime-image-list.gif)
 
-### Start the contaiainer
+### Start the container
 
 To start the container you have to provide the name you would like to attach to
 new container, image used run the container on, network setup and the main process to run the container in.
@@ -271,15 +271,3 @@ systemctl status container-runtimed
 ```
 
 Logs for the client will be available out-of-the-box when running client commands.
-
-### Example Commands
-
-Provide examples of common commands for creating, running, and managing containers.
-
-```bash
-# Example command 1
-rust-container run my-container /bin/bash
-
-# Example command 2
-rust-container list
-```
