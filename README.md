@@ -13,6 +13,7 @@ A lightweight container runtime implemented in Rust.
 - [Installation](#installation)
 - [Dependencies](#dependencies)
 - [Usage](#usage)
+- [Debugging](#debugging)
 - [Demo](#demo)
 - [Contributing](#contributing)
 - [License](#license)
@@ -97,6 +98,8 @@ At the moment of writing those are available instructions:
   After this directive just specify the name of the image you would like to base new image of. After the installation you will have tha _base_ image available out of the box. The _base_ image is a Debian filesystem,
   so all the binaries included in the Debian will be available inside this conatiner.
 
+- Lines preceeded with '#' will be treated as comments and ignored by parser.
+
   Altoght the list of supported Dockefile-like commands is rather short, it is suprisingly effective.
 
 ##### How is `base` image build?
@@ -154,11 +157,29 @@ and monitors currently running conatiners.
 
 #### On Debian based systems
 
-`make install_debian`
+```bash
+make install_debian
+```
 
 #### On Arch based systems
 
-`make install_arch`
+```bash
+make install_arch
+```
+
+#### Enable the daemon
+
+```bash
+systemctl enable container-runtimed
+```
+
+#### Check if client and daemon works
+
+This command should list built images. The `base` image should be available out of the box.
+
+```bash
+container-runtime image list
+```
 
 ## Dependencies
 
@@ -180,6 +201,69 @@ To create the environement, create the Dockerfile-like file with instructions fo
 This project provides examples of how to create one:
 
 #### Image with NGINX
+
+![Nginx](docs/nginx-dockerfile.png)
+
+#### Image with Node.js runtime
+
+![Nodejs](docs/nodejs-dockerfile.png)
+
+#### Image with simple bash scripts
+
+![Bash](docs/bash-dockerfile.png)
+
+#### Execute the build command:
+
+```bash
+container-runtime build {my-image-name} {path-to-the-dockerfile}
+```
+
+#### List built images
+
+List the images that are already built and ready to use.
+
+```bash
+container-runtime image list
+```
+
+### Start the contaiainer
+
+To start the container you have to provide the name you would like to attach to
+new container, image used run the container on, network setup and the main process to run the container in.
+
+```bash
+container-runtime start {my-container-name} {image-name} {network [host,none]} {command} {args}
+```
+
+At the moment of writing the documentation, there are two networking modes available:
+
+- `host` - uses the network stack of the host
+- `none` - network inside the container is complety separated from the host
+
+### List running containers
+
+```bash
+container-runtime list
+```
+
+### Stop the conatiner
+
+Stop specified container (if running)
+
+```bash
+container-runtime stop {container-name}
+```
+
+## Debugging
+
+Container runtime has logging implemented via `log4rs`.
+To check what happend on the daemon, use the output passed to systemd:
+
+```bash
+systemctl status container-runtimed
+```
+
+Logs for the client will be available out-of-the-box when running client commands.
 
 ### Example Commands
 
