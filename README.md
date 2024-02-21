@@ -218,6 +218,8 @@ This project provides examples of how to create one:
 container-runtime build {my-image-name} {path-to-the-dockerfile}
 ```
 
+![container-runtime list](docs/container-runtime-build.gif)
+
 #### List built images
 
 List the images that are already built and ready to use.
@@ -225,6 +227,8 @@ List the images that are already built and ready to use.
 ```bash
 container-runtime image list
 ```
+
+![container-runtime list](docs/container-runtime-image-list.gif)
 
 ### Start the contaiainer
 
@@ -235,6 +239,7 @@ new container, image used run the container on, network setup and the main proce
 container-runtime start {my-container-name} {image-name} {network [host,none]} {command} {args}
 ```
 
+![container-runtime list](docs/container-runtime-start.gif)
 At the moment of writing the documentation, there are two networking modes available:
 
 - `host` - uses the network stack of the host
@@ -245,6 +250,8 @@ At the moment of writing the documentation, there are two networking modes avail
 ```bash
 container-runtime list
 ```
+
+![container-runtime list](docs/container-runtime-list.gif)
 
 ### Stop the conatiner
 
