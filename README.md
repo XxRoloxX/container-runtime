@@ -1,8 +1,8 @@
-# Rust Container Runtime
+# Linux Container Runtime from scratch
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-A lightweight container runtime implemented in Rust.
+A lightweight container runtime implemented in Rust from scratch.
 
 ## Table of Contents
 
