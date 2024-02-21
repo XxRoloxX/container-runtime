@@ -41,6 +41,34 @@ At the moment of writing the containers are isolated with the PID, Mount, Networ
 When container is started by itself it starts in an empty directory without any processes and usefull binaries.
 To make containers more usable the concept of images is intruduced
 
+### Images
+
+Container image is nothing more than a schema of what to do to prepare the container before its start.
+This usually includes copying files from the host system and installing third-party binaries.
+
+This implementation follows simple Dockerfile schema to create images.
+At the moment of writing those are available instructions:
+
+- **COPY**: Copies directory or file from the host to the image. **The paths are relative to the path of the Dockerfile.**
+- **RUN** Runs a command inside the image. This is accomplished via creating a special container on the image builded with the previous instructions. Therefor changes applied after this command will not be made to the host system, but will be accessible to all containers that start with this image.
+- **ENTRYPOINT** Command provided after this directive will be run **ALWAYS** before the start of the container using that image. This is usually used to populate the database or start backgroud services.
+- **FROM** - Image might use changes intruduced in another image via **FROM** directive.
+  After this directive specify the name of the image you would like to base new image of. After the installation you will have tha _base_ image available out of the box.
+  The _base_ image is a Debian filesystem, so all the binaries included in the Debian will be available inside this conatiner.
+
+- Lines preceeded with '#' will be treated as comments and ignored by parser.
+
+  Altoght the list of supported Dockefile-like commands is rather short, it is suprisingly effective.
+
+##### How is `base` image build?
+
+The base image is just a debian filesystem with working symlinks, device files, ect.
+There are multiple ways to acquire such filesystem such as fetching the reporitory.
+In this project I used debootstrap, which does exacly that.
+The benefit of using debootstrap over standard fetching is compression and caching.
+This base image is built only once during the installation, and new images that are based on `base` image will simply copy the image locally and build over it.
+So there will be no need to run debootstrap after the installation.
+
 ### How the container is run?
 
 Running the container is done via:
@@ -49,7 +77,8 @@ Running the container is done via:
 
 Mounting the image that the container is using via **OverlayFS** mount, so that the image itself is not writable,
 and all of the changes made by the container will disappear after container exits.
-**OverlayFS** is extremly usefull here because it allows as to have the unchanged base filesystem each time the container is stared without copying any files from the image each time the container is started.
+**OverlayFS** is extremly usefull here because it allows as to have the unchanged base filesystem each
+time the container is stared without copying any files from the image each time the container is started.
 
 #### Using the unshare syscall
 
@@ -72,42 +101,14 @@ So before the target process is started, those commands are executed inside the 
 #### Executing the target command
 
 Each container is created as a environment around the process that the user specifies at the start of the container.
-When this process exits, the container is exited and cleaned.
+When the process exits, the container is exited and cleaned.
 
 ### Container hooks
 
 It is possible to use the hooks that are run at the moment the container is started, and when the container exits.
-At the moment of writing this is used to pass the container
-target process PID to the cliend and allow the client to run
+This is used to pass the container
+target process PID to the client and allow the client to run
 strace on the started container.
-
-### Images
-
-Container image is nothing more than a schema of what to do to prepare the container before its start.
-This usually includes copying files from the host system and installing third-party binaries.
-
-This implementation follows simple Dockerfile schema to create images.
-At the moment of writing those are available instructions:
-
-- **COPY**: Copies directory or file from the host to the image. **The paths are relative to the path of the Dockerfile.**
-- **RUN** Runs a command inside the image. This is accomplished via creating a special container on the image builded with the previous instructions. Therefor changes applied after this command will not be made to the host system, but will be accessible to all containers that start with this image.
-- **ENTRYPOINT** Command provided after this directive will be run **ALWAYS** before the start of the container using that image. This is usually used to populate the database or start backgroud services.
-- **FROM** - Every image might used changes intruduced in another image via **FROM** directive.
-  After this directive just specify the name of the image you would like to base new image of. After the installation you will have tha _base_ image available out of the box. The _base_ image is a Debian filesystem,
-  so all the binaries included in the Debian will be available inside this conatiner.
-
-- Lines preceeded with '#' will be treated as comments and ignored by parser.
-
-  Altoght the list of supported Dockefile-like commands is rather short, it is suprisingly effective.
-
-##### How is `base` image build?
-
-The base image is just a debian filesystem with working symlinks, device files, ect.
-There are multiple ways to aquire such filesystem such as for example fetching the reporitory.
-In this project I used debootstrap, which does exacly that.
-The benefit of using debootstrap over standard fetching is compression and caching.
-This base image is built only once during the installation, and new images that are based on `base` image will simply copy the image locally and build over it.
-So there will be no need to run debootstrap after the installation.
 
 ## Architecture
 
