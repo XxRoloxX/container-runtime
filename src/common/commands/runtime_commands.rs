@@ -46,6 +46,7 @@ pub enum ContainerCommand {
         /// The image to use
         image: String,
 
+        // The network configuration
         network: Option<NetworkConfiguration>,
 
         /// The command to run as the root process

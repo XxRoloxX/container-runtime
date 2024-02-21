@@ -30,11 +30,12 @@ touch $BASE_IMAGE_PATH/entrypoints.json
 echo "Copy logger configuration"
 cp ./log4rs.yaml $INSTALL_PATH
 
-echo "Installing the daemon binary"
-cp ./target/x86_64-unknown-linux-musl/debug/daemon /usr/local/bin/container-runtimed
+echo "Installing the project dependencies"
+cp -rf ./target/release /opt/container-runtime
 
-echo "Installing the client binary"
-cp ./target/x86_64-unknown-linux-musl/debug/client /usr/local/bin/container-runtime
+echo "Creating the symlinks to the binaries"
+ln -snf /opt/container-runtime/daemon /usr/local/bin/container-runtimed
+ln -snf /opt/container-runtime/client /usr/local/bin/container-runtime
 
 echo "Installing the daemon systemd service"
 cp ./install_scripts/container-runtime.service /etc/systemd/system/container-runtimed.service
