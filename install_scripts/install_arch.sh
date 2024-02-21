@@ -6,6 +6,5 @@ pacman -S --noconfirm strace debootstrap
 
 echo "Set executable scripts"
 chmod +x install_scripts/install.sh
+chmod +x install_scripts/build.sh
 
-echo "Installing the container-runtime"
-./install_scripts/install.sh

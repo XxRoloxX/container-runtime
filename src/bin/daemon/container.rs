@@ -7,10 +7,7 @@ use container_runtime::common::{
     commands::runtime_commands::NetworkConfiguration,
     filesystem::{clear_directory, mount_overlayfs, setup_rootfs},
     image::Image,
-    process::{
-        clear_process_signal_handlers, container_unshare, execute_command, get_install_path,
-        wait_for_child_process,
-    },
+    process::{container_unshare, execute_command, get_install_path, wait_for_child_process},
     sockets::sockets_with_parsers::container_commands_socket::ContainerCommandStream,
 };
 use log::info;

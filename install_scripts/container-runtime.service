@@ -5,7 +5,7 @@ StartLimitIntervalSec=0
 [Service]
 Type=simple
 User=root
-ExecStart=/home/wieslaw/.cargo/bin/daemon
+ExecStart=/usr/local/bin/container-runtimed
 Restart=always
 
 [Install]

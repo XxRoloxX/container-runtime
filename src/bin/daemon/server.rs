@@ -1,5 +1,4 @@
 use container_runtime::common::client_request::ClientRequest;
-use container_runtime::common::process::ignore_process_termination;
 use container_runtime::common::sockets::generic_sockets_with_parsers::CommandHandler;
 use container_runtime::common::sockets::sockets_with_parsers::container_commands_socket::ContainerCommandListener;
 use log::info;
@@ -13,7 +12,6 @@ pub fn run_server(mut socket: ContainerCommandListener) -> Result<(), String> {
     socket.prepare_socket()?;
     let router: CommandHandler<ClientRequest> =
         Box::from(move |buf| route_message(&mut runner, buf));
-    // ignore_process_termination()?;
     socket.listen(router)?;
     Ok(())
 }

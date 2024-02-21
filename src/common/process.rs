@@ -3,7 +3,6 @@ use nix::sys::signal::{signal, SigHandler, Signal};
 use nix::sys::wait::waitpid;
 use nix::unistd::{execvp, Pid};
 use std::ffi::CString;
-use std::process::Command;
 
 use super::commands::runtime_commands::NetworkConfiguration;
 
