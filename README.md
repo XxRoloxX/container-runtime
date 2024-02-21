@@ -8,7 +8,7 @@ A lightweight container runtime implemented in Rust from scratch.
 
 - [Introduction](#introduction)
 - [What are Linux Containers?](#what-are-linux-containers)
-- [How are Linux Containers Utilized?](#how-are-linux-containers-implemented)
+- [How are Linux Containers Implemented?](#how-are-linux-containers-implemented)
 - [Architecture](#architecture)
 - [Installation](#installation)
 - [Dependencies](#dependencies)
