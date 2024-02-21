@@ -3,6 +3,7 @@ use nix::sys::signal::{signal, SigHandler, Signal};
 use nix::sys::wait::waitpid;
 use nix::unistd::{execvp, Pid};
 use std::ffi::CString;
+use std::process::Command;
 
 use super::commands::runtime_commands::NetworkConfiguration;
 
@@ -63,7 +64,7 @@ pub fn clear_process_signal_handlers() -> Result<(), String> {
 }
 
 pub fn kill_process(pid: Pid) -> Result<(), String> {
-    nix::sys::signal::kill(pid, nix::sys::signal::Signal::SIGTERM)
+    nix::sys::signal::kill(pid, nix::sys::signal::Signal::SIGKILL)
         .map_err(|e| format!("Failed to kill process {}: {}", pid, e))?;
     Ok(())
 }

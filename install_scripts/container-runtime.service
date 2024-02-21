@@ -3,11 +3,10 @@ Description=Simple container runtime
 After=network.target
 StartLimitIntervalSec=0
 [Service]
-Type=forking
-Restart=always
-RestartSec=1
+Type=simple
 User=root
-ExecStart=$HOME/.cargo/bin/daemon
+ExecStart=/home/wieslaw/.cargo/bin/daemon
+Restart=always
 
 [Install]
 WantedBy=multi-user.target
