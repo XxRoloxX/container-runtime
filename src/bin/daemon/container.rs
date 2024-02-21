@@ -12,7 +12,7 @@ use container_runtime::common::{
 };
 use log::info;
 use nix::{
-    mount::{umount, umount2},
+    mount::umount2,
     unistd::{fork, ForkResult, Pid},
 };
 
