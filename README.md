@@ -50,7 +50,7 @@ Container image is nothing more than a schema of what to do to prepare the conta
 This usually includes copying files from the host system and installing third-party binaries.
 
 This implementation follows simple Dockerfile schema to create images.
-At the moment of writing those are available instructions:
+This is a list of supported instructions:
 
 - **COPY**: Copies directory or file from the host to the image. **The paths are relative to the path of the Dockerfile.**
 - **RUN** Runs a command inside the image. This is accomplished via creating a special container on the image builded with the previous instructions. Therefor changes applied after this command will not be made to the host system, but will be accessible to all containers that start with this image.
@@ -63,7 +63,7 @@ At the moment of writing those are available instructions:
 
   Although the list of supported Dockefile-like commands is rather short, it is suprisingly effective.
 
-##### How is `base` image build?
+##### How is `base` image built?
 
 The base image is just a debian filesystem with working symlinks, device files, ect.
 There are multiple ways to acquire such filesystem such as fetching the reporitory.
