@@ -126,11 +126,11 @@ which runs on the background and can communicate with multiple clients at the sa
 Communication between clients and the daemon is currently implemented via UNIX sockets.
 
 For the Unix socket implementation, the main socket for daemon is created, on which it listens for incoming commands.
-When the clients connects to the daemon socket, it also opens a ephemeral client socket which is used
+When the clients connect to the daemon socket, it also opens a ephemeral client socket which is used
 to send response from daemon to each client separately.
 
 The sockets are implemented in such a manner that
-it will be exetremly easy to add TCP/IP sockets and use them, insteam of UNIX sockets.
+it will be extremely easy to add TCP/IP sockets and use them, instead of UNIX sockets.
 
 ### Multithreading
 
